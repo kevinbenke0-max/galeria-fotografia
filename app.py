@@ -1,14 +1,3 @@
-import streamlit as st
-
-# Configuración de la página
-st.set_page_config(
-    page_title="Galería Fotográfica",
-    page_icon="📸",
-    layout="wide"
-)
-
-# Mostrar el logo centrado o en la barra lateral
-st.image("logo.png", width=250)
 import os
 import zipfile
 import io

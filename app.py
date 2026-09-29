@@ -6,7 +6,8 @@ import streamlit as st
 from PIL import Image
 
 st.set_page_config(page_title="Galería Fotográfica", layout="wide")
-
+if os.path.exists("logo.jpeg"):
+    st.image("logo.jpeg", width=200)
 BASE_DIR = "galerias_clientes"
 if not os.path.exists(BASE_DIR):
     os.makedirs(BASE_DIR)

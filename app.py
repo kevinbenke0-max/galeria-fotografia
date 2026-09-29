@@ -12,29 +12,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. Estilo CSS para la identidad visual (Dorado y Neón)
-st.markdown("""
-    <style>
-    img {
-        border-radius: 12px;
-        border: 2px solid #D4AF37;
-        box-shadow: 0px 0px 12px rgba(212, 175, 55, 0.4);
-    }
-    div.stButton > button:first-child {
-        background-color: #D4AF37;
-        color: #000000;
-        font-weight: bold;
-        border-radius: 8px;
-        border: none;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-# 3. Mostrar Logo
-if os.path.exists("logo.jpeg"):
-    st.image("logo.jpeg", width=220)
-
-# 4. Carpeta Base
+# 2. Carpeta Base
 BASE_DIR = "galerias_clientes"
 if not os.path.exists(BASE_DIR):
     os.makedirs(BASE_DIR)
@@ -62,7 +40,7 @@ def generar_zip(ruta_galeria, lista_fotos):
     buffer.seek(0)
     return buffer
 
-# 5. Menú Lateral (Navegación)
+# 3. Menú Lateral (Navegación)
 st.sidebar.title("📌 Menú Principal")
 modo = st.sidebar.radio("Modo de acceso:", ["👤 Cliente (Ver Galería)", "📸 Fotógrafo (Administración)"])
 
@@ -70,15 +48,14 @@ modo = st.sidebar.radio("Modo de acceso:", ["👤 Cliente (Ver Galería)", "📸
 # MODO FOTÓGRAFO (ADMINISTRACIÓN)
 # ---------------------------------------------------------
 if modo == "📸 Fotógrafo (Administración)":
-    st.title("⚙️ Panel de Administración del Fotógrafo")
+    st.title("⚙️ Panel de Administración")
     
     password = st.sidebar.text_input("Contraseña de Administrador:", type="password")
     
     if password == "1234":
-        st.success("Acceso concedido al panel de administración.")
+        st.success("Acceso concedido.")
         
-        # Crear nueva galería
-        st.subheader("1. Crear Nueva Galería de Cliente")
+        st.subheader("1. Crear Nueva Galería")
         nuevo_evento = st.text_input("Nombre de la nueva galería (ej: 15_Anos_Sofia):")
         if st.button("Crear Galería"):
             if nuevo_evento.strip() != "":
@@ -94,32 +71,30 @@ if modo == "📸 Fotógrafo (Administración)":
                 
         st.markdown("---")
         
-        # Subir fotos
         st.subheader("2. Cargar Fotografías")
         eventos_existentes = [d for d in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, d))]
         
         if eventos_existentes:
-            evento_destino = st.selectbox("Selecciona la galería a la que subirás fotos:", eventos_existentes)
-            archivos_subidos = st.file_uploader("Selecciona imágenes (.jpg, .png):", type=["jpg", "jpeg", "png", "webp"], accept_multiple_files=True)
+            evento_destino = st.selectbox("Selecciona la galería:", eventos_existentes)
+            archivos_subidos = st.file_uploader("Selecciona imágenes:", type=["jpg", "jpeg", "png", "webp"], accept_multiple_files=True)
             
-            if st.button("Guardar Fotos en la Galería"):
+            if st.button("Guardar Fotos"):
                 if archivos_subidos:
                     ruta_destino = os.path.join(BASE_DIR, evento_destino)
                     for foto in archivos_subidos:
                         with open(os.path.join(ruta_destino, foto.name), "wb") as f:
                             f.write(foto.getbuffer())
-                    st.success(f"Se subieron {len(archivos_subidos)} fotos a '{evento_destino}' con éxito.")
+                    st.success(f"Se subieron {len(archivos_subidos)} fotos a '{evento_destino}'.")
                 else:
-                    st.error("Por favor selecciona al menos una foto.")
+                    st.error("Selecciona al menos una foto.")
         else:
-            st.info("Crea una galería primero para poder subir fotos.")
+            st.info("Crea una galería primero.")
     else:
         if password != "":
             st.error("Contraseña incorrecta.")
         else:
-            st.info("Ingresa la contraseña en la barra lateral para gestionar tus galerías.")
-
-# ---------------------------------------------------------
+            st.info("Ingresa la contraseña para administrar.")
+            # ---------------------------------------------------------
 # MODO CLIENTE (VISUALIZACIÓN Y SELECCIÓN)
 # ---------------------------------------------------------
 else:
@@ -129,7 +104,7 @@ else:
         st.title("Bienvenido a la Galería Studio 📸")
         st.info("No hay galerías activas en este momento.")
     else:
-        evento_seleccionado = st.sidebar.selectbox("Selecciona tu galería/evento:", eventos)
+        evento_seleccionado = st.sidebar.selectbox("Selecciona tu galería:", eventos)
         
         if evento_seleccionado:
             st.title(f"🖼️ Galería: {evento_seleccionado}")
@@ -175,7 +150,8 @@ else:
                         if guardar_btn:
                             guardar_info_evento(evento_seleccionado, {"seleccionadas": seleccionadas})
                             st.success(f"¡Selección guardada! Elegiste {len(seleccionadas)} foto(s).")
-                            with tab_resumen:
+                
+                with tab_resumen:
                     st.subheader("Fotos Seleccionadas Hasta el Momento")
                     datos_actuales = obtener_info_evento(evento_seleccionado) or {}
                     lista_sel = datos_actuales.get("seleccionadas", [])
@@ -198,20 +174,3 @@ else:
                         str_json = json.dumps({"evento": evento_seleccionado, "seleccionadas": lista_sel}, indent=4)
                         st.download_button(
                             label="Descargar info.json",
-                            data=str_json,
-                            file_name=f"{evento_seleccionado}_seleccion.json",
-                            mime="application/json"
-                        )
-                    
-                    with col_d2:
-                        st.markdown("##### 📦 Descargar fotos seleccionadas (.ZIP)")
-                        if lista_sel:
-                            zip_buffer = generar_zip(ruta_galeria, lista_sel)
-                            st.download_button(
-                                label="Descargar Fotos (.ZIP)",
-                                data=zip_buffer,
-                                file_name=f"{evento_seleccionado}_fotos_seleccionadas.zip",
-                                mime="application/zip"
-                            )
-                        else:
-                            st.caption("Selecciona al menos una foto para descargar en ZIP.")

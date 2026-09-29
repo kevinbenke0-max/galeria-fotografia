@@ -59,12 +59,12 @@ else:
         
         ruta_galeria = os.path.join(BASE_DIR, evento_seleccionado)
         
-        # Filtrar solo archivos de imagen
+        # Filtrar solo archivos de imagen (evitando .gitkeep, info.json, etc.)
         extensiones_validas = (".jpg", ".jpeg", ".png", ".webp")
         fotos = [f for f in os.listdir(ruta_galeria) if f.lower().endswith(extensiones_validas)]
         
         if not fotos:
-            st.warning("Esta galería aún no contiene fotografías.")
+            st.warning("Esta galería aún no contiene fotografías (.jpg, .png). Sube imágenes a la carpeta para visualizarlas.")
         else:
             # Cargar selecciones previas si existen
             datos_previos = obtener_info_evento(evento_seleccionado) or {}
@@ -84,7 +84,7 @@ else:
                     with col:
                         # Mostrar la imagen
                         imagen = Image.open(ruta_foto)
-                        st.image(imagen, use_column_width=True)
+                        st.image(imagen, use_container_width=True)
                         
                         # Marcar si ya estaba seleccionada
                         marcado = foto in favoritas_previas

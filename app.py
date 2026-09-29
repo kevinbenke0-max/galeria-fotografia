@@ -10,7 +10,32 @@ if os.path.exists("logo.jpeg"):
     with col_logo:
         st.image("logo.jpeg", width=400)
 st.set_page_config(page_title="Galería Fotográfica", layout="wide")
-
+# Estilos Personalizados en Verde Olivo
+st.markdown("""
+    <style>
+    /* Bordes y sombras verde olivo en imágenes */
+    img {
+        border-radius: 8px;
+        border: 2px solid #556B2F;
+        box-shadow: 0px 4px 10px rgba(85, 107, 47, 0.25);
+    }
+    
+    /* Botones principales en Verde Olivo */
+    div.stButton > button:first-child {
+        background-color: #556B2F !important;
+        color: #FFFFFF !important;
+        font-weight: bold;
+        border-radius: 6px;
+        border: none;
+    }
+    
+    /* Efecto al pasar el mouse por los botones */
+    div.stButton > button:first-child:hover {
+        background-color: #6B8E23 !important;
+        color: #FFFFFF !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
 BASE_DIR = "galerias_clientes"
 if not os.path.exists(BASE_DIR):
     os.makedirs(BASE_DIR)

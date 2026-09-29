@@ -39,8 +39,7 @@ def generar_zip(ruta_galeria, lista_fotos):
                 zip_file.write(path_foto, arcname=foto)
     buffer.seek(0)
     return buffer
-
-# 3. Menú Lateral (Navegación)
+    # 3. Menú Lateral (Navegación)
 st.sidebar.title("📌 Menú Principal")
 modo = st.sidebar.radio("Modo de acceso:", ["👤 Cliente (Ver Galería)", "📸 Fotógrafo (Administración)"])
 
@@ -174,3 +173,20 @@ else:
                         str_json = json.dumps({"evento": evento_seleccionado, "seleccionadas": lista_sel}, indent=4)
                         st.download_button(
                             label="Descargar info.json",
+                        data=str_json,
+                            file_name=f"{evento_seleccionado}_seleccion.json",
+                            mime="application/json"
+                        )
+                    
+                    with col_d2:
+                        st.markdown("##### 📦 Descargar fotos seleccionadas (.ZIP)")
+                        if lista_sel:
+                            zip_buffer = generar_zip(ruta_galeria, lista_sel)
+                            st.download_button(
+                                label="Descargar Fotos (.ZIP)",
+                                data=zip_buffer,
+                                file_name=f"{evento_seleccionado}_fotos_seleccionadas.zip",
+                                mime="application/zip"
+                            )
+                        else:
+                            st.caption("Selecciona al menos una foto para descargar en ZIP.")

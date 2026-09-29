@@ -66,13 +66,18 @@ def generar_zip(ruta_galeria, lista_fotos):
 st.sidebar.title("📌 Menú Principal")
 modo = st.sidebar.radio("Modo de acceso:", ["👤 Cliente (Ver Galería)", "📸 Fotógrafo (Administración)"])
 
-# MODO FOTÓGRAFO
+# ---------------------------------------------------------
+# MODO FOTÓGRAFO (ADMINISTRACIÓN)
+# ---------------------------------------------------------
 if modo == "📸 Fotógrafo (Administración)":
     st.title("⚙️ Panel de Administración del Fotógrafo")
+    
     password = st.sidebar.text_input("Contraseña de Administrador:", type="password")
     
     if password == "1234":
         st.success("Acceso concedido al panel de administración.")
+        
+        # Crear nueva galería
         st.subheader("1. Crear Nueva Galería de Cliente")
         nuevo_evento = st.text_input("Nombre de la nueva galería (ej: 15_Anos_Sofia):")
         if st.button("Crear Galería"):
@@ -88,6 +93,8 @@ if modo == "📸 Fotógrafo (Administración)":
                 st.error("Ingresa un nombre válido.")
                 
         st.markdown("---")
+        
+        # Subir fotos
         st.subheader("2. Cargar Fotografías")
         eventos_existentes = [d for d in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, d))]
         
@@ -109,7 +116,12 @@ if modo == "📸 Fotógrafo (Administración)":
     else:
         if password != "":
             st.error("Contraseña incorrecta.")
-            # MODO CLIENTE
+        else:
+            st.info("Ingresa la contraseña en la barra lateral para gestionar tus galerías.")
+
+# ---------------------------------------------------------
+# MODO CLIENTE (VISUALIZACIÓN Y SELECCIÓN)
+# ---------------------------------------------------------
 else:
     eventos = [d for d in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, d))]
     
@@ -163,8 +175,7 @@ else:
                         if guardar_btn:
                             guardar_info_evento(evento_seleccionado, {"seleccionadas": seleccionadas})
                             st.success(f"¡Selección guardada! Elegiste {len(seleccionadas)} foto(s).")
-                
-                with tab_resumen:
+                            with tab_resumen:
                     st.subheader("Fotos Seleccionadas Hasta el Momento")
                     datos_actuales = obtener_info_evento(evento_seleccionado) or {}
                     lista_sel = datos_actuales.get("seleccionadas", [])
@@ -189,4 +200,18 @@ else:
                             label="Descargar info.json",
                             data=str_json,
                             file_name=f"{evento_seleccionado}_seleccion.json",
-                            mim
+                            mime="application/json"
+                        )
+                    
+                    with col_d2:
+                        st.markdown("##### 📦 Descargar fotos seleccionadas (.ZIP)")
+                        if lista_sel:
+                            zip_buffer = generar_zip(ruta_galeria, lista_sel)
+                            st.download_button(
+                                label="Descargar Fotos (.ZIP)",
+                                data=zip_buffer,
+                                file_name=f"{evento_seleccionado}_fotos_seleccionadas.zip",
+                                mime="application/zip"
+                            )
+                        else:
+                            st.caption("Selecciona al menos una foto para descargar en ZIP.")

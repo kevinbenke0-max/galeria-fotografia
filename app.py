@@ -3,7 +3,6 @@ import json
 import zipfile
 import io
 import base64
-import shutil
 import streamlit as st
 from PIL import Image
 
@@ -14,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. Función para fondo de pantalla
+# 2. Función para fondo de pantalla transparente
 def set_bg_hack(main_bg):
     if os.path.exists(main_bg):
         with open(main_bg, "rb") as f:
@@ -37,14 +36,15 @@ def set_bg_hack(main_bg):
             unsafe_allow_html=True
         )
 
-# Aplicar fondo
-set_bg_hack("fondo.jpeg")
+# Aplicar fondo (asegúrate de que el archivo en GitHub se llame fondo.jpg)
+set_bg_hack("fondo.jpg")
 
-# 3. Carpeta Base y Funciones
+# 3. Carpeta Base
 BASE_DIR = "galerias_clientes"
 if not os.path.exists(BASE_DIR):
     os.makedirs(BASE_DIR)
 
+# Funciones Auxiliares
 def guardar_info_evento(nombre_evento, datos):
     ruta_info = os.path.join(BASE_DIR, nombre_evento, "info.json")
     with open(ruta_info, "w") as f:
@@ -66,96 +66,58 @@ def generar_zip(ruta_galeria, lista_fotos):
                 zip_file.write(path_foto, arcname=foto)
     buffer.seek(0)
     return buffer
-    # 4. Menú Lateral (Navegación)
+    
+# 4. Menú Lateral (Navegación)
 st.sidebar.title("📌 Menú Principal")
 modo = st.sidebar.radio("Modo de acceso:", ["👤 Cliente (Ver Galería)", "📸 Fotógrafo (Administración)"])
-
-# CREDENCIALES DEL FOTÓGRAFO
-USUARIO_CORRECTO = "Camila"
-PASSWORD_CORRECTO = "151124"
 
 # MODO FOTÓGRAFO
 if modo == "📸 Fotógrafo (Administración)":
     st.title("⚙️ Panel de Administración")
+    password = st.sidebar.text_input("Contraseña de Administrador:", type="password")
     
-    st.sidebar.subheader("Inicio de Sesión")
-    usuario_input = st.sidebar.text_input("Usuario:")
-    password_input = st.sidebar.text_input("Contraseña:", type="password")
-    
-    if usuario_input == USUARIO_CORRECTO and password_input == PASSWORD_CORRECTO:
-        st.success(f"Bienvenida, {USUARIO_CORRECTO}.")
-        
-        tab_crear, tab_subir, tab_eliminar = st.tabs([
-            "➕ Crear Galería", 
-            "📤 Cargar Fotos", 
-            "🗑️ Eliminar Galería"
-        ])
-        
-        with tab_crear:
-            st.subheader("1. Crear Nueva Galería")
-            nuevo_evento = st.text_input("Nombre de la nueva galería (ej: 15_Anos_Sofia):")
-            if st.button("Crear Galería"):
-                if nuevo_evento.strip() != "":
-                    ruta_nueva = os.path.join(BASE_DIR, nuevo_evento.strip())
-                    if not os.path.exists(ruta_nueva):
-                        os.makedirs(ruta_nueva)
-                        st.success(f"Galería '{nuevo_evento}' creada con éxito.")
-                        st.rerun()
-                    else:
-                        st.warning("Esa galería ya existe.")
+    if password == "1234":
+        st.success("Acceso concedido.")
+        st.subheader("1. Crear Nueva Galería")
+        nuevo_evento = st.text_input("Nombre de la nueva galería (ej: 15_Anos_Sofia):")
+        if st.button("Crear Galería"):
+            if nuevo_evento.strip() != "":
+                ruta_nueva = os.path.join(BASE_DIR, nuevo_evento.strip())
+                if not os.path.exists(ruta_nueva):
+                    os.makedirs(ruta_nueva)
+                    st.success(f"Galería '{nuevo_evento}' creada con éxito.")
+                    st.rerun()
                 else:
-                    st.error("Ingresa un nombre válido.")
+                    st.warning("Esa galería ya existe.")
+            else:
+                st.error("Ingresa un nombre válido.")
+                
+        st.markdown("---")
+        st.subheader("2. Cargar Fotografías")
+        eventos_existentes = [d for d in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, d))]
         
-        with tab_subir:
-            st.subheader("2. Cargar Fotografías")
-            eventos_existentes = [d for d in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, d))]
+        if eventos_existentes:
+            evento_destino = st.selectbox("Selecciona la galería:", eventos_existentes)
+            archivos_subidos = st.file_uploader("Selecciona imágenes:", type=["jpg", "jpeg", "png", "webp"], accept_multiple_files=True)
             
-            if eventos_existentes:
-                evento_destino = st.selectbox("Selecciona la galería para subir fotos:", eventos_existentes)
-                archivos_subidos = st.file_uploader("Selecciona imágenes:", type=["jpg", "jpeg", "png", "webp"], accept_multiple_files=True)
-                
-                if st.button("Guardar Fotos"):
-                    if archivos_subidos:
-                        ruta_destino = os.path.join(BASE_DIR, evento_destino)
-                        for foto in archivos_subidos:
-                            with open(os.path.join(ruta_destino, foto.name), "wb") as f:
-                                f.write(foto.getbuffer())
-                        st.success(f"Se subieron {len(archivos_subidos)} fotos a '{evento_destino}'.")
-                    else:
-                        st.error("Selecciona al menos una foto.")
-            else:
-                st.info("Crea una galería primero.")
-
-        with tab_eliminar:
-            st.subheader("3. Eliminar Galería Completa")
-            eventos_existentes = [d for d in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, d))]
-            
-            if eventos_existentes:
-                evento_a_borrar = st.selectbox("Selecciona la galería que deseas eliminar:", eventos_existentes, key="borrar_select")
-                st.warning(f"⚠️ Atención: Esta acción eliminará permanentemente la carpeta '{evento_a_borrar}' y todas las fotos contenidas en ella.")
-                
-                confirmacion = st.checkbox(f"Confirmo que deseo eliminar definitivamente '{evento_a_borrar}'")
-                
-                if st.button("🗑️ Eliminar Galería definitivamente"):
-                    if confirmacion:
-                        ruta_borrar = os.path.join(BASE_DIR, evento_a_borrar)
-                        try:
-                            shutil.rmtree(ruta_borrar)
-                            st.success(f"La galería '{evento_a_borrar}' ha sido eliminada.")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Error al eliminar la galería: {e}")
-                    else:
-                        st.error("Por favor, marca la casilla de confirmación para proceder.")
-            else:
-                st.info("No hay galerías para eliminar.")
-
-    else:
-        if usuario_input != "" or password_input != "":
-            st.error("Usuario o contraseña incorrectos.")
+            if st.button("Guardar Fotos"):
+                if archivos_subidos:
+                    ruta_destino = os.path.join(BASE_DIR, evento_destino)
+                    for foto in archivos_subidos:
+                        with open(os.path.join(ruta_destino, foto.name), "wb") as f:
+                            f.write(foto.getbuffer())
+                    st.success(f"Se subieron {len(archivos_subidos)} fotos a '{evento_destino}'.")
+                else:
+                    st.error("Selecciona al menos una foto.")
         else:
-            st.info("Ingresa el usuario y la contraseña en la barra lateral para acceder.")
-            # MODO CLIENTE
+            st.info("Crea una galería primero.")
+    else:
+        if password != "":
+            st.error("Contraseña incorrecta.")
+        else:
+            st.info("Ingresa la contraseña para administrar.")
+
+# MODO CLIENTE
 else:
     eventos = [d for d in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, d))]
     
@@ -190,7 +152,6 @@ else:
                     with st.form("form_seleccion"):
                         seleccionadas = []
                         cols = st.columns(3)
-                        
                         for index, foto in enumerate(fotos):
                             col = cols[index % 3]
                             ruta_foto = os.path.join(ruta_galeria, foto)
@@ -235,7 +196,7 @@ else:
                             label="Descargar info.json",
                             data=str_json,
                             file_name=f"{evento_seleccionado}_seleccion.json",
-                        mime="application/json"
+                            mime="application/json"
                         )
                     
                     with col_d2:

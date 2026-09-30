@@ -4,13 +4,7 @@ import io
 import json
 import streamlit as st
 from PIL import Image
-# Logo Horizontal Ampliado
-if os.path.exists("logo.jpeg"):
-    col_logo, _ = st.columns([2, 1])
-    with col_logo:
-        st.image("logo.jpeg", width=400)
 st.set_page_config(page_title="Galería Fotográfica", layout="wide")
-# Función para convertir la imagen de fondo local a Base64
 import base64
 
 def set_bg_hack(main_bg):
@@ -20,6 +14,7 @@ def set_bg_hack(main_bg):
         st.markdown(
             f"""
             <style>
+            /* Aplica el fondo a toda la ventana */
             .stApp {{
                 background-image: url("data:image/png;base64,{encoded_string}");
                 background-size: cover;
@@ -27,13 +22,17 @@ def set_bg_hack(main_bg):
                 background-repeat: no-repeat;
                 background-attachment: fixed;
             }}
+            /* Quita los fondos sólidos predeterminados de Streamlit */
+            [data-testid="stHeader"], [data-testid="stAppViewContainer"] {{
+                background-color: transparent !important;
+            }}
             </style>
             """,
             unsafe_allow_html=True
         )
 
-# Aplicar fondo si la imagen existe
-set_bg_hack("fondo.jpg")
+# Aplicar fondo
+set_bg_hack("fondo.jpeg")
 # Estilos Personalizados en Verde Olivo
 st.markdown("""
     <style>

@@ -71,86 +71,7 @@ def generar_zip(ruta_galeria, lista_fotos):
 st.sidebar.title("Menú Principal")
 modo = st.sidebar.radio("Modo de acceso:", ["👤 Cliente (Ver Galería)", "📸 Fotógrafo (Administración)"])
 
-# Funciones para manejo de usuarios registrados
-USUARIOS_FILE = "usuarios.json"
-
-def cargar_usuarios():
-    if os.path.exists(USUARIOS_FILE):
-        with open(USUARIOS_FILE, "r") as f:
-            return json.load(f)
-    return {}
-
-def guardar_usuario(usuario, password, nombre):
-    usuarios = cargar_usuarios()
-    usuarios[usuario.lower()] = {"password": password, "nombre": nombre}
-    with open(USUARIOS_FILE, "w") as f:
-        json.dump(usuarios, f, indent=4)
-
-# MODO FOTÓGRAFO (ADMINISTRACIÓN MULTIUSARIO)
-if modo == "📸 Fotógrafo (Administración)":
-    st.title("⚙️ Panel de Administración")
-    
-    # Pestañas para Iniciar Sesión o Registrarse
-    tab_login, tab_registro = st.sidebar.tabs(["🔑 Iniciar Sesión", "📝 Registrarse"])
-    
-    # 1. PESTAÑA REGISTRO DE NUEVO USUARIO
-    with tab_registro:
-        st.sidebar.subheader("Crear nueva cuenta")
-        nuevo_nombre = st.sidebar.text_input("Nombre / Estudio:")
-        nuevo_user = st.sidebar.text_input("Crear Usuario:")
-        nueva_pass = st.sidebar.text_input("Crear Contraseña:", type="password")
-        
-        if st.sidebar.button("Registrarme"):
-            usuarios_registrados = cargar_usuarios()
-            if not nuevo_user or not nueva_pass:
-                st.sidebar.error("Completa todos los campos.")
-            elif nuevo_user.lower() in usuarios_registrados:
-                st.sidebar.warning("El usuario ya existe. Elige otro.")
-            else:
-                guardar_usuario(nuevo_user, nueva_pass, nuevo_nombre or nuevo_user)
-                st.sidebar.success("¡Cuenta creada! Ahora inicia sesión.")
-                
-    # 2. PESTAÑA INICIO DE SESIÓN
-    with tab_login:
-        st.sidebar.subheader("Ingresar")
-        usuario_input = st.sidebar.text_input("Usuario:", key="login_user")
-        password_input = st.sidebar.text_input("Contraseña:", type="password", key="login_pass")
-        
-        usuarios_registrados = cargar_usuarios()
-        user_key = usuario_input.strip().lower()
-        
-        # Validación de credenciales
-        if user_key in usuarios_registrados and usuarios_registrados[user_key]["password"] == password_input:
-            nombre_fotografo = usuarios_registrados[user_key]["nombre"]
-            st.success(f"Bienvenido/a, {nombre_fotografo}.")
-            
-            # Pestañas de gestión de galerías
-            tab_crear, tab_subir, tab_eliminar = st.tabs([
-                "➕ Crear Galería", 
-                "📤 Cargar Fotos", 
-                "🗑️ Eliminar Galería"
-            ])
-            
-            with tab_crear:
-                st.subheader("1. Crear Nueva Galería")
-                nuevo_evento = st.text_input("Nombre de la nueva galería (ej: 15_Anos_Sofia):")
-                if st.button("Crear Galería"):
-                    if nuevo_evento.strip() != "":
-                        ruta_nueva = os.path.join(BASE_DIR, nuevo_evento.strip())
-                        if not os.path.exists(ruta_nueva):
-                            os.makedirs(ruta_nueva)
-                            st.success(f"Galería '{nuevo_evento}' creada con éxito.")
-                            st.rerun()
-                        else:
-                            st.warning("Esa galería ya existe.")
-                    else:
-                        st.error("Ingresa un nombre válido.")
-            
-            with tab_subir:
-                st.subheader("2. Cargar Fotografías")
-                eventos_existentes = [d for d in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, d))]
-                
-                if eventos_existentes:
+if eventos_existentes:
                     evento_destino = st.selectbox("Selecciona la galería para subir fotos:", eventos_existentes)
                     archivos_subidos = st.file_uploader("Selecciona imágenes:", type=["jpg", "jpeg", "png", "webp"], accept_multiple_files=True)
                     
@@ -195,6 +116,7 @@ if modo == "📸 Fotógrafo (Administración)":
                 st.error("Usuario o contraseña incorrectos.")
             else:
                 st.info("Ingresa con tu usuario registrado o crea una cuenta en la pestaña 'Registrarse'.")
+                
 # MODO CLIENTE
 else:
     eventos = [d for d in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, d))]

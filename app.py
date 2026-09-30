@@ -68,55 +68,133 @@ def generar_zip(ruta_galeria, lista_fotos):
     return buffer
     
 # 4. Menú Lateral (Navegación)
-st.sidebar.title("📌 Menú Principal")
+st.sidebar.title("Menú Principal")
 modo = st.sidebar.radio("Modo de acceso:", ["👤 Cliente (Ver Galería)", "📸 Fotógrafo (Administración)"])
 
-# MODO FOTÓGRAFO
+# Funciones para manejo de usuarios registrados
+USUARIOS_FILE = "usuarios.json"
+
+def cargar_usuarios():
+    if os.path.exists(USUARIOS_FILE):
+        with open(USUARIOS_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+def guardar_usuario(usuario, password, nombre):
+    usuarios = cargar_usuarios()
+    usuarios[usuario.lower()] = {"password": password, "nombre": nombre}
+    with open(USUARIOS_FILE, "w") as f:
+        json.dump(usuarios, f, indent=4)
+
+# MODO FOTÓGRAFO (ADMINISTRACIÓN MULTIUSARIO)
 if modo == "📸 Fotógrafo (Administración)":
     st.title("⚙️ Panel de Administración")
-    password = st.sidebar.text_input("Contraseña de Administrador:", type="password")
     
-    if password == "1234":
-        st.success("Acceso concedido.")
-        st.subheader("1. Crear Nueva Galería")
-        nuevo_evento = st.text_input("Nombre de la nueva galería (ej: 15_Anos_Sofia):")
-        if st.button("Crear Galería"):
-            if nuevo_evento.strip() != "":
-                ruta_nueva = os.path.join(BASE_DIR, nuevo_evento.strip())
-                if not os.path.exists(ruta_nueva):
-                    os.makedirs(ruta_nueva)
-                    st.success(f"Galería '{nuevo_evento}' creada con éxito.")
-                    st.rerun()
-                else:
-                    st.warning("Esa galería ya existe.")
-            else:
-                st.error("Ingresa un nombre válido.")
-                
-        st.markdown("---")
-        st.subheader("2. Cargar Fotografías")
-        eventos_existentes = [d for d in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, d))]
+    # Pestañas para Iniciar Sesión o Registrarse
+    tab_login, tab_registro = st.sidebar.tabs(["🔑 Iniciar Sesión", "📝 Registrarse"])
+    
+    # 1. PESTAÑA REGISTRO DE NUEVO USUARIO
+    with tab_registro:
+        st.sidebar.subheader("Crear nueva cuenta")
+        nuevo_nombre = st.sidebar.text_input("Nombre / Estudio:")
+        nuevo_user = st.sidebar.text_input("Crear Usuario:")
+        nueva_pass = st.sidebar.text_input("Crear Contraseña:", type="password")
         
-        if eventos_existentes:
-            evento_destino = st.selectbox("Selecciona la galería:", eventos_existentes)
-            archivos_subidos = st.file_uploader("Selecciona imágenes:", type=["jpg", "jpeg", "png", "webp"], accept_multiple_files=True)
+        if st.sidebar.button("Registrarme"):
+            usuarios_registrados = cargar_usuarios()
+            if not nuevo_user or not nueva_pass:
+                st.sidebar.error("Completa todos los campos.")
+            elif nuevo_user.lower() in usuarios_registrados:
+                st.sidebar.warning("El usuario ya existe. Elige otro.")
+            else:
+                guardar_usuario(nuevo_user, nueva_pass, nuevo_nombre or nuevo_user)
+                st.sidebar.success("¡Cuenta creada! Ahora inicia sesión.")
+                
+    # 2. PESTAÑA INICIO DE SESIÓN
+    with tab_login:
+        st.sidebar.subheader("Ingresar")
+        usuario_input = st.sidebar.text_input("Usuario:", key="login_user")
+        password_input = st.sidebar.text_input("Contraseña:", type="password", key="login_pass")
+        
+        usuarios_registrados = cargar_usuarios()
+        user_key = usuario_input.strip().lower()
+        
+        # Validación de credenciales
+        if user_key in usuarios_registrados and usuarios_registrados[user_key]["password"] == password_input:
+            nombre_fotografo = usuarios_registrados[user_key]["nombre"]
+            st.success(f"Bienvenido/a, {nombre_fotografo}.")
             
-            if st.button("Guardar Fotos"):
-                if archivos_subidos:
-                    ruta_destino = os.path.join(BASE_DIR, evento_destino)
-                    for foto in archivos_subidos:
-                        with open(os.path.join(ruta_destino, foto.name), "wb") as f:
-                            f.write(foto.getbuffer())
-                    st.success(f"Se subieron {len(archivos_subidos)} fotos a '{evento_destino}'.")
+            # Pestañas de gestión de galerías
+            tab_crear, tab_subir, tab_eliminar = st.tabs([
+                "➕ Crear Galería", 
+                "📤 Cargar Fotos", 
+                "🗑️ Eliminar Galería"
+            ])
+            
+            with tab_crear:
+                st.subheader("1. Crear Nueva Galería")
+                nuevo_evento = st.text_input("Nombre de la nueva galería (ej: 15_Anos_Sofia):")
+                if st.button("Crear Galería"):
+                    if nuevo_evento.strip() != "":
+                        ruta_nueva = os.path.join(BASE_DIR, nuevo_evento.strip())
+                        if not os.path.exists(ruta_nueva):
+                            os.makedirs(ruta_nueva)
+                            st.success(f"Galería '{nuevo_evento}' creada con éxito.")
+                            st.rerun()
+                        else:
+                            st.warning("Esa galería ya existe.")
+                    else:
+                        st.error("Ingresa un nombre válido.")
+            
+            with tab_subir:
+                st.subheader("2. Cargar Fotografías")
+                eventos_existentes = [d for d in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, d))]
+                
+                if eventos_existentes:
+                    evento_destino = st.selectbox("Selecciona la galería para subir fotos:", eventos_existentes)
+                    archivos_subidos = st.file_uploader("Selecciona imágenes:", type=["jpg", "jpeg", "png", "webp"], accept_multiple_files=True)
+                    
+                    if st.button("Guardar Fotos"):
+                        if archivos_subidos:
+                            ruta_destino = os.path.join(BASE_DIR, evento_destino)
+                            for foto in archivos_subidos:
+                                with open(os.path.join(ruta_destino, foto.name), "wb") as f:
+                                    f.write(foto.getbuffer())
+                            st.success(f"Se subieron {len(archivos_subidos)} fotos a '{evento_destino}'.")
+                        else:
+                            st.error("Selecciona al menos una foto.")
                 else:
-                    st.error("Selecciona al menos una foto.")
-        else:
-            st.info("Crea una galería primero.")
-    else:
-        if password != "":
-            st.error("Contraseña incorrecta.")
-        else:
-            st.info("Ingresa la contraseña para administrar.")
+                    st.info("Crea una galería primero.")
 
+            with tab_eliminar:
+                st.subheader("3. Eliminar Galería Completa")
+                eventos_existentes = [d for d in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, d))]
+                
+                if eventos_existentes:
+                    evento_a_borrar = st.selectbox("Selecciona la galería que deseas eliminar:", eventos_existentes, key="borrar_select")
+                    st.warning(f"⚠️ Atención: Esta acción eliminará permanentemente la carpeta '{evento_a_borrar}' y todas las fotos.")
+                    
+                    confirmacion = st.checkbox(f"Confirmo que deseo eliminar definitivamente '{evento_a_borrar}'")
+                    
+                    if st.button("🗑️ Eliminar Galería definitivamente"):
+                        if confirmacion:
+                            ruta_borrar = os.path.join(BASE_DIR, evento_a_borrar)
+                            try:
+                                shutil.rmtree(ruta_borrar)
+                                st.success(f"La galería '{evento_a_borrar}' ha sido eliminada.")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Error al eliminar la galería: {e}")
+                        else:
+                            st.error("Por favor, marca la casilla de confirmación para proceder.")
+                else:
+                    st.info("No hay galerías para eliminar.")
+
+        else:
+            if usuario_input != "" or password_input != "":
+                st.error("Usuario o contraseña incorrectos.")
+            else:
+                st.info("Ingresa con tu usuario registrado o crea una cuenta en la pestaña 'Registrarse'.")
 # MODO CLIENTE
 else:
     eventos = [d for d in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, d))]

@@ -32,7 +32,7 @@ def set_bg_hack(main_bg):
         )
 
 # Aplicar fondo
-set_bg_hack("fondo.jpeg")
+set_bg_hack("fondo.jpg")
 # Estilos Personalizados en Verde Olivo
 st.markdown("""
     <style>

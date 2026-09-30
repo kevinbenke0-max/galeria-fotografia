@@ -1,12 +1,20 @@
 import os
+import json
 import zipfile
 import io
-import json
+import base64
+import shutil
 import streamlit as st
 from PIL import Image
-st.set_page_config(page_title="Galería Fotográfica", layout="wide")
-import base64
 
+# 1. Configuración de la página
+st.set_page_config(
+    page_title="Galería Fotográfica Studio",
+    page_icon="📸",
+    layout="wide"
+)
+
+# 2. Función para fondo de pantalla
 def set_bg_hack(main_bg):
     if os.path.exists(main_bg):
         with open(main_bg, "rb") as f:
@@ -14,7 +22,6 @@ def set_bg_hack(main_bg):
         st.markdown(
             f"""
             <style>
-            /* Aplica el fondo a toda la ventana */
             .stApp {{
                 background-image: url("data:image/png;base64,{encoded_string}");
                 background-size: cover;
@@ -22,7 +29,6 @@ def set_bg_hack(main_bg):
                 background-repeat: no-repeat;
                 background-attachment: fixed;
             }}
-            /* Quita los fondos sólidos predeterminados de Streamlit */
             [data-testid="stHeader"], [data-testid="stAppViewContainer"] {{
                 background-color: transparent !important;
             }}
@@ -32,171 +38,215 @@ def set_bg_hack(main_bg):
         )
 
 # Aplicar fondo
-set_bg_hack("fondo.jpg")
-# Estilos Personalizados en Verde Olivo
-st.markdown("""
-    <style>
-    /* Bordes y sombras verde olivo en imágenes */
-    img {
-        border-radius: 8px;
-        border: 2px solid #556B2F;
-        box-shadow: 0px 4px 10px rgba(85, 107, 47, 0.25);
-    }
-    
-    /* Botones principales en Verde Olivo */
-    div.stButton > button:first-child {
-        background-color: #556B2F !important;
-        color: #FFFFFF !important;
-        font-weight: bold;
-        border-radius: 6px;
-        border: none;
-    }
-    
-    /* Efecto al pasar el mouse por los botones */
-    div.stButton > button:first-child:hover {
-        background-color: #6B8E23 !important;
-        color: #FFFFFF !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
+set_bg_hack("fondo.jpeg")
+
+# 3. Carpeta Base
 BASE_DIR = "galerias_clientes"
 if not os.path.exists(BASE_DIR):
     os.makedirs(BASE_DIR)
 
+# Funciones Auxiliares
 def guardar_info_evento(nombre_evento, datos):
     ruta_info = os.path.join(BASE_DIR, nombre_evento, "info.json")
     with open(ruta_info, "w") as f:
-        json.dump(datos, f)
+        json.dump(datos, f, indent=4)
 
 def obtener_info_evento(nombre_evento):
     ruta_info = os.path.join(BASE_DIR, nombre_evento, "info.json")
     if os.path.exists(ruta_info):
         with open(ruta_info, "r") as f:
             return json.load(f)
-    return {}
+    return None
 
-st.title("📸 Sistema de Gestión y Entrega Fotográfica")
+def generar_zip(ruta_galeria, lista_fotos):
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as zip_file:
+        for foto in lista_fotos:
+            path_foto = os.path.join(ruta_galeria, foto)
+            if os.path.exists(path_foto):
+                zip_file.write(path_foto, arcname=foto)
+                 buffer.seek(0)
+    return buffer
+               # 4. Menú Lateral (Navegación)
+st.sidebar.title("📌 Menú Principal")
+modo = st.sidebar.radio("Modo de acceso:", ["👤 Cliente (Ver Galería)", "📸 Fotógrafo (Administración)"])
 
-modo = st.sidebar.radio("Navegación", ["Panel Fotógrafa (Cargar Fotos)", "Portal Cliente (Ver y Descargar)"])
+# CREDENCIALES DEL FOTÓGRAFO
+USUARIO_CORRECTO = "Camila Switzer"
+PASSWORD_CORRECTO = "1234"
 
-# ==========================================
-# 1. PANEL DE LA FOTÓGRAFA
-# ==========================================
-if modo == "Panel Fotógrafa (Cargar Fotos)":
-    st.header("📤 Cargar Nuevo Proyecto / Galería")
+# MODO FOTÓGRAFO
+if modo == "📸 Fotógrafo (Administración)":
+    st.title("⚙️ Panel de Administración")
     
-    nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda_Sofia_y_Lucas)").strip()
-    clave_evento = st.text_input("Contraseña de acceso para el cliente", type="password").strip()
+    st.sidebar.subheader("Inicio de Sesión")
+    usuario_input = st.sidebar.text_input("Usuario:")
+    password_input = st.sidebar.text_input("Contraseña:", type="password")
     
-    archivos_subidos = st.file_uploader(
-        "Selecciona las fotos en alta resolución", 
-        type=["jpg", "jpeg", "png"], 
-        accept_multiple_files=True
-    )
-    
-    if st.button("Guardar y Crear Galería"):
-        if nombre_evento and clave_evento and archivos_subidos:
-            ruta_evento = os.path.join(BASE_DIR, nombre_evento)
-            os.makedirs(ruta_evento, exist_ok=True)
+    if usuario_input == USUARIO_CORRECTO and password_input == PASSWORD_CORRECTO:
+        st.success(f"Bienvenida, {USUARIO_CORRECTO}.")
+        
+        # TAB DE GESTIÓN
+        tab_crear, tab_subir, tab_eliminar = st.tabs([
+            "➕ Crear Galería", 
+            "📤 Cargar Fotos", 
+            "🗑️ Eliminar Galería"
+        ])
+        
+        with tab_crear:
+            st.subheader("1. Crear Nueva Galería")
+            nuevo_evento = st.text_input("Nombre de la nueva galería (ej: 15_Anos_Sofia):")
+            if st.button("Crear Galería"):
+                if nuevo_evento.strip() != "":
+                    ruta_nueva = os.path.join(BASE_DIR, nuevo_evento.strip())
+                    if not os.path.exists(ruta_nueva):
+                        os.makedirs(ruta_nueva)
+                        st.success(f"Galería '{nuevo_evento}' creada con éxito.")
+                        st.rerun()
+                    else:
+                        st.warning("Esa galería ya existe.")
+                else:
+                    st.error("Ingresa un nombre válido.") 
+   with tab_subir:
+            st.subheader("2. Cargar Fotografías")
+            eventos_existentes = [d for d in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, d))]
             
-            for archivo in archivos_subidos:
-                ruta_guardado = os.path.join(ruta_evento, archivo.name)
-                with open(ruta_guardado, "wb") as f:
-                    f.write(archivo.getbuffer())
-            
-            guardar_info_evento(nombre_evento, {"password": clave_evento, "favoritas": []})
-            st.success(f"¡Éxito! Galería '{nombre_evento}' creada con contraseña.")
-        else:
-            st.error("Por favor completa el nombre, la contraseña y sube al menos una foto.")
-
-    st.markdown("---")
-    st.subheader("📋 Ver Selección de Clientes")
-    eventos_existentes = [folder for folder in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, folder))]
-    if eventos_existentes:
-        evento_revisar = st.selectbox("Selecciona un evento para ver las fotos elegidas por el cliente:", eventos_existentes)
-        if evento_revisar:
-            info = obtener_info_evento(evento_revisar)
-            favs = info.get("favoritas", [])
-            if favs:
-                st.write(f"**El cliente seleccionó {len(favs)} foto(s) favorita(s):**")
-                for f in favs:
-                    st.write(f"- {f}")
+            if eventos_existentes:
+                evento_destino = st.selectbox("Selecciona la galería para subir fotos:", eventos_existentes)
+                archivos_subidos = st.file_uploader("Selecciona imágenes:", type=["jpg", "jpeg", "png", "webp"], accept_multiple_files=True)
+                
+                if st.button("Guardar Fotos"):
+                    if archivos_subidos:
+                        ruta_destino = os.path.join(BASE_DIR, evento_destino)
+                        for foto in archivos_subidos:
+                            with open(os.path.join(ruta_destino, foto.name), "wb") as f:
+                                f.write(foto.getbuffer())
+                        st.success(f"Se subieron {len(archivos_subidos)} fotos a '{evento_destino}'.")
+                    else:
+                        st.error("Selecciona al menos una foto.")
             else:
-                st.info("El cliente aún no ha guardado su selección de favoritas.")
-                # ==========================================
-# 2. PORTAL DEL CLIENTE
-# ==========================================
-else:
-    st.header("🖼️ Tu Galería Privada")
-    
-    eventos_disponibles = [folder for folder in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, folder))]
-    
-    if not eventos_disponibles:
-        st.info("Aún no hay galerías disponibles.")
+                st.info("Crea una galería primero.")
+
+        with tab_eliminar:
+            st.subheader("3. Eliminar Galería Completa")
+            eventos_existentes = [d for d in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, d))]
+            
+            if eventos_existentes:
+                evento_a_borrar = st.selectbox("Selecciona la galería que deseas eliminar:", eventos_existentes, key="borrar_select")
+                st.warning(f"⚠️ Atención: Esta acción eliminará permanentemente la carpeta '{evento_a_borrar}' y todas las fotos contenidas en ella.")
+                
+                confirmacion = st.checkbox(f"Confirmo que deseo eliminar definitivamente '{evento_a_borrar}'")
+                
+                if st.button("🗑️ Eliminar Galería definitivamente"):
+                    if confirmacion:
+                        ruta_borrar = os.path.join(BASE_DIR, evento_a_borrar)
+                        try:
+                            shutil.rmtree(ruta_borrar)
+                            st.success(f"La galería '{evento_a_borrar}' ha sido eliminada.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error al eliminar la galería: {e}")
+                    else:
+                        st.error("Por favor, marca la casilla de confirmación para proceder.")
+            else:
+                st.info("No hay galerías para eliminar.")
+
     else:
-        evento_seleccionado = st.selectbox("Selecciona tu evento / proyecto:", eventos_disponibles)
+        if usuario_input != "" or password_input != "":
+            st.error("Usuario o contraseña incorrectos.")
+        else:
+            st.info("Ingresa el usuario y la contraseña en la barra lateral para acceder.")
+            # MODO CLIENTE
+else:
+    eventos = [d for d in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, d))]
+    
+    if not eventos:
+        st.title("Bienvenido a la Galería Studio 📸")
+        st.info("No hay galerías activas en este momento.")
+    else:
+        evento_seleccionado = st.sidebar.selectbox("Selecciona tu galería:", eventos)
         
         if evento_seleccionado:
-            info_evento = obtener_info_evento(evento_seleccionado)
-            clave_correcta = info_evento.get("password", "")
+            st.title(f"🖼️ Galería: {evento_seleccionado}")
+            ruta_galeria = os.path.join(BASE_DIR, evento_seleccionado)
             
-            clave_ingresada = st.text_input("Ingresa tu clave de acceso:", type="password")
+            extensiones_validas = (".jpg", ".jpeg", ".png", ".webp")
+            fotos = [f for f in os.listdir(ruta_galeria) if f.lower().endswith(extensiones_validas)]
             
-            if clave_correcta and clave_ingresada != clave_correcta:
-                st.warning("🔒 Por favor ingresa la contraseña correcta para ver esta galería.")
+            if not fotos:
+                st.warning("Esta galería aún no contiene fotografías.")
             else:
-                st.success("🔓 Acceso concedido")
+                datos_previos = obtener_info_evento(evento_seleccionado) or {}
+                favoritas_previas = datos_previos.get("seleccionadas", [])
                 
-                ruta_galeria = os.path.join(BASE_DIR, evento_seleccionado)
-                fotos = [f for f in os.listdir(ruta_galeria) if f.lower().endswith(('jpg', 'jpeg', 'png'))]
+                tab_galeria, tab_resumen, tab_descarga = st.tabs([
+                    "📸 Selección de Fotos", 
+                    "📋 Resumen de Selección", 
+                    "📦 Zona de Descargas"
+                ])
                 
-                st.subheader(f"Fotos de: {evento_seleccionado} ({len(fotos)} imágenes)")
-                
-                # Botón de Descarga ZIP
-                buffer_zip = io.BytesIO()
-                with zipfile.ZipFile(buffer_zip, "w") as zf:
-                    for foto in fotos:
-                        ruta_foto = os.path.join(ruta_galeria, foto)
-                        zf.write(ruta_foto, arcname=foto)
-                buffer_zip.seek(0)
-                
-                st.download_button(
-                    label="📦 Descargar Galería Completa (.ZIP)",
-                    data=buffer_zip,
-                    file_name=f"{evento_seleccionado}_alta_resolucion.zip",
-                    mime="application/zip",
-                    use_container_width=True
-                )
-                
-                st.markdown("---")
-                
-                # Mostrar fotos y capturar selección
-                columnas = st.columns(3)
-                favoritas_seleccionadas = []
-                
-                for index, foto in enumerate(fotos):
-                    ruta_foto = os.path.join(ruta_galeria, foto)
-                    col = columnas[index % 3]
+                with tab_galeria:
+                    st.write("Marca la casilla de cada fotografía para añadirla a tu lista:")
                     
-                    with col:
-                        imagen = Image.open(ruta_foto)
-                        st.image(imagen, use_container_width=True)
+                    with st.form("form_seleccion"):
+                        seleccionadas = []
+                        cols = st.columns(3)
                         
-                        es_fav = st.checkbox("❤️ Favorita", key=f"fav_{index}")
-                        if es_fav:
-                            favoritas_seleccionadas.append(foto)
+                        for index, foto in enumerate(fotos):
+                            col = cols[index % 3]
+                            ruta_foto = os.path.join(ruta_galeria, foto)
+                            with col:
+                                imagen = Image.open(ruta_foto)
+                                st.image(imagen, use_container_width=True)
+                                
+                                marcado = foto in favoritas_previas
+                                if st.checkbox(f"Seleccionar ({foto})", value=marcado, key=foto):
+                                    seleccionadas.append(foto)
                         
-                        with open(ruta_foto, "rb") as file_data:
-                            st.download_button(
-                                label="⬇️ Descargar",
-                                data=file_data,
-                                file_name=foto,
-                                mime="image/jpeg",
-                                key=f"dl_{index}"
-                            )
+                        st.markdown("---")
+                        guardar_btn = st.form_submit_button("💾 Guardar Selección de Fotos")
+                        
+                        if guardar_btn:
+                            guardar_info_evento(evento_seleccionado, {"seleccionadas": seleccionadas})
+                            st.success(f"¡Selección guardada! Elegiste {len(seleccionadas)} foto(s).")
                 
-                st.markdown("---")
-                if st.button("📩 Enviar / Guardar Selección de Favoritas"):
-                    info_evento["favoritas"] = favoritas_seleccionadas
-                    guardar_info_evento(evento_seleccionado, info_evento)
-                    st.success(f"¡Selección guardada! Elegiste {len(favoritas_seleccionadas)} foto(s). La fotógrafa ya puede verlas en su panel.")
+                with tab_resumen:
+                    st.subheader("Fotos Seleccionadas Hasta el Momento")
+                    datos_actuales = obtener_info_evento(evento_seleccionado) or {}
+                    lista_sel = datos_actuales.get("seleccionadas", [])
+                    
+                    if not lista_sel:
+                        st.info("Aún no se ha guardado ninguna foto en esta galería.")
+                    else:
+                        st.write(f"**Total elegidas:** {len(lista_sel)} de {len(fotos)}")
+                        st.json(lista_sel)
+                
+                with tab_descarga:
+                    st.subheader("Opciones de Descarga")
+                    datos_actuales = obtener_info_evento(evento_seleccionado) or {}
+                    lista_sel = datos_actuales.get("seleccionadas", [])
+                    
+                    col_d1, col_d2 = st.columns(2)
+                    
+                    with col_d1:
+                        st.markdown("##### 📄 Exportar lista (JSON)")
+                        str_json = json.dumps({"evento": evento_seleccionado, "seleccionadas": lista_sel}, indent=4)
+                        st.download_button(
+                            label="Descargar info.json",
+                            data=str_json,
+                            file_name=f"{evento_seleccionado}_seleccion.json",
+                            mime="application/json"
+                        )
+                    
+                    with col_d2:
+                        st.markdown("##### 📦 Descargar fotos seleccionadas (.ZIP)")
+                        if lista_sel:
+                            zip_buffer = generar_zip(ruta_galeria, lista_sel)
+                            st.download_button(
+                                label="Descargar Fotos (.ZIP)",
+                                data=zip_buffer,
+                                file_name=f"{evento_seleccionado}_fotos_seleccionadas.zip",
+                                mime="application/zip"
+                            )
+                        else:
+                            st.caption("Selecciona al menos una foto para descargar en ZIP.")

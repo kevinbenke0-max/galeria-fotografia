@@ -71,8 +71,8 @@ st.sidebar.title("📌 Menú Principal")
 modo = st.sidebar.radio("Modo de acceso:", ["👤 Cliente (Ver Galería)", "📸 Fotógrafo (Administración)"])
 
 # CREDENCIALES DEL FOTÓGRAFO
-USUARIO_CORRECTO = "Camila Schwitzer"
-PASSWORD_CORRECTO = "1234"
+USUARIO_CORRECTO = "Camila"
+PASSWORD_CORRECTO = "151124"
 
 # MODO FOTÓGRAFO
 if modo == "📸 Fotógrafo (Administración)":

@@ -65,9 +65,9 @@ def generar_zip(ruta_galeria, lista_fotos):
             path_foto = os.path.join(ruta_galeria, foto)
             if os.path.exists(path_foto):
                 zip_file.write(path_foto, arcname=foto)
-                 buffer.seek(0)
-                 return buffer
-               # 4. Menú Lateral (Navegación)
+    buffer.seek(0)
+    return buffer
+# 4. Menú Lateral (Navegación)
 st.sidebar.title("📌 Menú Principal")
 modo = st.sidebar.radio("Modo de acceso:", ["👤 Cliente (Ver Galería)", "📸 Fotógrafo (Administración)"])
 

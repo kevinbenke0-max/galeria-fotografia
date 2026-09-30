@@ -10,6 +10,30 @@ if os.path.exists("logo.jpeg"):
     with col_logo:
         st.image("logo.jpeg", width=400)
 st.set_page_config(page_title="Galería Fotográfica", layout="wide")
+# Función para convertir la imagen de fondo local a Base64
+import base64
+
+def set_bg_hack(main_bg):
+    if os.path.exists(main_bg):
+        with open(main_bg, "rb") as f:
+            encoded_string = base64.b64encode(f.read()).decode()
+        st.markdown(
+            f"""
+            <style>
+            .stApp {{
+                background-image: url("data:image/png;base64,{encoded_string}");
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
+# Aplicar fondo si la imagen existe
+set_bg_hack("fondo.jpg")
 # Estilos Personalizados en Verde Olivo
 st.markdown("""
     <style>

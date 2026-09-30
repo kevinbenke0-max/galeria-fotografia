@@ -40,12 +40,11 @@ def set_bg_hack(main_bg):
 # Aplicar fondo
 set_bg_hack("fondo.jpeg")
 
-# 3. Carpeta Base
+# 3. Carpeta Base y Funciones
 BASE_DIR = "galerias_clientes"
 if not os.path.exists(BASE_DIR):
     os.makedirs(BASE_DIR)
 
-# Funciones Auxiliares
 def guardar_info_evento(nombre_evento, datos):
     ruta_info = os.path.join(BASE_DIR, nombre_evento, "info.json")
     with open(ruta_info, "w") as f:
@@ -67,8 +66,7 @@ def generar_zip(ruta_galeria, lista_fotos):
                 zip_file.write(path_foto, arcname=foto)
     buffer.seek(0)
     return buffer
-    
-# 4. Menú Lateral (Navegación)
+    # 4. Menú Lateral (Navegación)
 st.sidebar.title("📌 Menú Principal")
 modo = st.sidebar.radio("Modo de acceso:", ["👤 Cliente (Ver Galería)", "📸 Fotógrafo (Administración)"])
 
@@ -87,7 +85,6 @@ if modo == "📸 Fotógrafo (Administración)":
     if usuario_input == USUARIO_CORRECTO and password_input == PASSWORD_CORRECTO:
         st.success(f"Bienvenida, {USUARIO_CORRECTO}.")
         
-        # TAB DE GESTIÓN
         tab_crear, tab_subir, tab_eliminar = st.tabs([
             "➕ Crear Galería", 
             "📤 Cargar Fotos", 
@@ -107,8 +104,9 @@ if modo == "📸 Fotógrafo (Administración)":
                     else:
                         st.warning("Esa galería ya existe.")
                 else:
-                    st.error("Ingresa un nombre válido.") 
-   with tab_subir:
+                    st.error("Ingresa un nombre válido.")
+        
+        with tab_subir:
             st.subheader("2. Cargar Fotografías")
             eventos_existentes = [d for d in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, d))]
             
@@ -196,6 +194,7 @@ else:
                         for index, foto in enumerate(fotos):
                             col = cols[index % 3]
                             ruta_foto = os.path.join(ruta_galeria, foto)
+                            
                             with col:
                                 imagen = Image.open(ruta_foto)
                                 st.image(imagen, use_container_width=True)
@@ -236,7 +235,7 @@ else:
                             label="Descargar info.json",
                             data=str_json,
                             file_name=f"{evento_seleccionado}_seleccion.json",
-                            mime="application/json"
+                        mime="application/json"
                         )
                     
                     with col_d2:

@@ -53,6 +53,25 @@ def obtener_info_evento(nombre_evento):
 st.title("📸 Sistema de Gestión y Entrega Fotográfica")
 
 modo = st.sidebar.radio("Navegación", ["Panel Fotógrafa (Cargar Fotos)", "Portal Cliente (Ver y Descargar)"])
+# Módulo de Login para la Fotógrafa en la Barra Lateral
+if modo == "Panel Fotógrafa (Cargar Fotos)":
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🔑 Acceso Fotógrafa")
+    
+    # Campos para ingresar credenciales
+    usuario_input = st.sidebar.text_input("Usuario:", key="user_admin")
+    password_input = st.sidebar.text_input("Contraseña:", type="password", key="pass_admin")
+    
+    # Verificación de datos
+    if usuario_input.strip().lower() == USUARIO_CORRECTO.lower() and password_input == PASSWORD_CORRECTO:
+        st.sidebar.success("Sesión iniciada")
+        # Aquí continúa el código del panel de administración
+    else:
+        if usuario_input != "" or password_input != "":
+            st.sidebar.error("Credenciales incorrectas")
+        else:
+            st.sidebar.info("Ingresa tus datos para administrar.")
+
 # ==========================================
 # 1. PANEL DE LA FOTÓGRAFA
 # ==========================================

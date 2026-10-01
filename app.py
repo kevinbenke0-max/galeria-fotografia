@@ -6,6 +6,31 @@ import streamlit as st
 from PIL import Image
 
 st.set_page_config(page_title="Galería Fotográfica", layout="wide")
+# Función para fondo de pantalla personalizado
+def set_bg_hack(main_bg):
+    if os.path.exists(main_bg):
+        with open(main_bg, "rb") as f:
+            encoded_string = base64.b64encode(f.read()).decode()
+        st.markdown(
+            f"""
+            <style>
+            .stApp {{
+                background-image: url("data:image/png;base64,{encoded_string}");
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+            }}
+            [data-testid="stHeader"], [data-testid="stAppViewContainer"] {{
+                background-color: transparent !important;
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
+# Aplicar la imagen de fondo
+set_bg_hack("fondo.jpeg")
 
 BASE_DIR = "galerias_clientes"
 if not os.path.exists(BASE_DIR):

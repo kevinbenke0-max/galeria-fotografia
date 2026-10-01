@@ -154,7 +154,7 @@ else:
                     
                     with col:
                         imagen = Image.open(ruta_foto)
-                        st.image(imagen, use_column_width=True)
+                        st.image(imagen, use_container_width=True)
                         
                         es_fav = st.checkbox("❤️ Favorita", key=f"fav_{index}")
                         if es_fav:

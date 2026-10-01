@@ -37,6 +37,22 @@ set_bg_hack("fondo.jpeg")
 BASE_DIR = "galerias_clientes"
 if not os.path.exists(BASE_DIR):
     os.makedirs(BASE_DIR)
+USUARIOS_FILE = "usuarios.json"
+
+def cargar_usuarios():
+    if not os.path.exists(USUARIOS_FILE):
+        usuarios_iniciales = {"camila": "151124"}
+        with open(USUARIOS_FILE, "w") as f:
+            json.dump(usuarios_iniciales, f)
+        return usuarios_iniciales
+    with open(USUARIOS_FILE, "r") as f:
+        return json.load(f)
+
+def registrar_usuario(usuario, password):
+    usuarios = cargar_usuarios()
+    usuarios[usuario.lower()] = password
+    with open(USUARIOS_FILE, "w") as f:
+        json.dump(usuarios, f)
 
 def guardar_info_evento(nombre_evento, datos):
     ruta_info = os.path.join(BASE_DIR, nombre_evento, "info.json")
@@ -53,69 +69,92 @@ def obtener_info_evento(nombre_evento):
 st.title("📸 Sistema de Gestión y Entrega Fotográfica")
 
 modo = st.sidebar.radio("Navegación", ["Panel Fotógrafa (Cargar Fotos)", "Portal Cliente (Ver y Descargar)"])
-# Módulo de Login para la Fotógrafa en la Barra Lateral
+# ==========================================
+# 1. PANEL DE FOTÓGRAFOS (SOLO ESTA PARTE)
+# ==========================================
 if modo == "Panel Fotógrafa (Cargar Fotos)":
     st.sidebar.markdown("---")
-    st.sidebar.subheader("🔑 Acceso Fotógrafa")
     
-    # Campos para ingresar credenciales
-    usuario_input = st.sidebar.text_input("Usuario:", key="user_admin")
-    password_input = st.sidebar.text_input("Contraseña:", type="password", key="pass_admin")
+    opcion_cuenta = st.sidebar.radio("Acceso Fotógrafos:", ["Iniciar Sesión", "Crear Nuevo Perfil"])
+    usuarios_db = cargar_usuarios()
     
-    # Verificación de datos
-    if usuario_input.strip().lower() == USUARIO_CORRECTO.lower() and password_input == PASSWORD_CORRECTO:
-        st.sidebar.success("Sesión iniciada")
-        # Aquí continúa el código del panel de administración
-    else:
-        if usuario_input != "" or password_input != "":
-            st.sidebar.error("Credenciales incorrectas")
-        else:
-            st.sidebar.info("Ingresa tus datos para administrar.")
+    usuario_autenticado = False
+    usuario_actual = ""
 
-# ==========================================
-# 1. PANEL DE LA FOTÓGRAFA
-# ==========================================
-if modo == "Panel Fotógrafa (Cargar Fotos)":
-    st.header("📤 Cargar Nuevo Proyecto / Galería")
-    
-    nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda_Sofia_y_Lucas)").strip()
-    clave_evento = st.text_input("Contraseña de acceso para el cliente", type="password").strip()
-    
-    archivos_subidos = st.file_uploader(
-        "Selecciona las fotos en alta resolución", 
-        type=["jpg", "jpeg", "png"], 
-        accept_multiple_files=True
-    )
-    
-    if st.button("Guardar y Crear Galería"):
-        if nombre_evento and clave_evento and archivos_subidos:
-            ruta_evento = os.path.join(BASE_DIR, nombre_evento)
-            os.makedirs(ruta_evento, exist_ok=True)
-            
-            for archivo in archivos_subidos:
-                ruta_guardado = os.path.join(ruta_evento, archivo.name)
-                with open(ruta_guardado, "wb") as f:
-                    f.write(archivo.getbuffer())
-            
-            guardar_info_evento(nombre_evento, {"password": clave_evento, "favoritas": []})
-            st.success(f"¡Éxito! Galería '{nombre_evento}' creada con contraseña.")
-        else:
-            st.error("Por favor completa el nombre, la contraseña y sube al menos una foto.")
-
-    st.markdown("---")
-    st.subheader("📋 Ver Selección de Clientes")
-    eventos_existentes = [folder for folder in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, folder))]
-    if eventos_existentes:
-        evento_revisar = st.selectbox("Selecciona un evento para ver las fotos elegidas por el cliente:", eventos_existentes)
-        if evento_revisar:
-            info = obtener_info_evento(evento_revisar)
-            favs = info.get("favoritas", [])
-            if favs:
-                st.write(f"**El cliente seleccionó {len(favs)} foto(s) favorita(s):**")
-                for f in favs:
-                    st.write(f"- {f}")
+    if opcion_cuenta == "Iniciar Sesión":
+        st.sidebar.subheader("🔑 Iniciar Sesión")
+        u_input = st.sidebar.text_input("Usuario:", key="login_user").strip()
+        p_input = st.sidebar.text_input("Contraseña:", type="password", key="login_pass").strip()
+        
+        if u_input and p_input:
+            if u_input.lower() in usuarios_db and usuarios_db[u_input.lower()] == p_input:
+                st.sidebar.success(f"¡Bienvenido/a, {u_input}!")
+                usuario_autenticado = True
+                usuario_actual = u_input
             else:
-                st.info("El cliente aún no ha guardado su selección de favoritas.")
+                st.sidebar.error("Usuario o contraseña incorrectos")
+
+    elif opcion_cuenta == "Crear Nuevo Perfil":
+        st.sidebar.subheader("📝 Registrar Fotógrafo/a")
+        nuevo_u = st.sidebar.text_input("Nuevo Usuario:", key="reg_user").strip()
+        nuevo_p = st.sidebar.text_input("Nueva Contraseña:", type="password", key="reg_pass").strip()
+        
+        if st.sidebar.button("Registrar Perfil"):
+            if nuevo_u and nuevo_p:
+                if nuevo_u.lower() in usuarios_db:
+                    st.sidebar.warning("El usuario ya existe. Intenta con otro nombre.")
+                else:
+                    registrar_usuario(nuevo_u, nuevo_p)
+                    st.sidebar.success("¡Perfil creado con éxito! Ahora ve a 'Iniciar Sesión'.")
+            else:
+                st.sidebar.error("Completa todos los campos.")
+
+    if usuario_autenticado:
+        st.header(f"📸 Panel de Control - {usuario_actual}")
+        
+        st.subheader("Crear Nueva Galería de Cliente")
+        nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda_Sofia_y_Lucas):").strip()
+        clave_evento = st.text_input("Contraseña de acceso para el cliente:", type="password").strip()
+        
+        archivos_subidos = st.file_uploader(
+            "Selecciona las fotos en alta resolución:",
+            type=["jpg", "jpeg", "png"],
+            accept_multiple_files=True
+        )
+        
+        if st.button("Guardar y Crear Galería"):
+            if nombre_evento and clave_evento and archivos_subidos:
+                ruta_evento = os.path.join(BASE_DIR, nombre_evento)
+                os.makedirs(ruta_evento, exist_ok=True)
+                
+                for archivo in archivos_subidos:
+                    ruta_guardado = os.path.join(ruta_evento, archivo.name)
+                    with open(ruta_guardado, "wb") as f:
+                        f.write(archivo.getbuffer())
+                
+                guardar_info_evento(nombre_evento, {"password": clave_evento, "favoritas": []})
+                st.success(f"¡Éxito! Galería '{nombre_evento}' creada correctamente.")
+            else:
+                st.error("Por favor completa el nombre, la contraseña y sube al menos una foto.")
+                
+        st.markdown("---")
+        
+        st.subheader("📋 Ver Selección de Clientes")
+        eventos_existentes = [f for f in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, f))]
+        if eventos_existentes:
+            evento_revisar = st.selectbox("Selecciona un evento para ver las fotos elegidas por el cliente:", eventos_existentes)
+            if evento_revisar:
+                info = obtener_info_evento(evento_revisar)
+                favo = info.get("favoritas", [])
+                if favo:
+                    st.write(f"📌 El cliente seleccionó **{len(favo)}** foto(s) favorita(s):")
+                    for f in favo:
+                        st.write(f"- {f}")
+                else:
+                    st.info("El cliente aún no ha guardado su selección de favoritas.")
+    else:
+        st.info("👈 Por favor, inicia sesión o crea un nuevo perfil desde el menú lateral para gestionar tus galerías.")
+
                 # ==========================================
 # 2. PORTAL DEL CLIENTE
 # ==========================================

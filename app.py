@@ -30,7 +30,7 @@ def set_bg_hack(main_bg):
         )
 
 # Aplicar la imagen de fondo
-set_bg_hack("fondo.jpg")
+set_bg_hack("fondo.jpeg")
 
 BASE_DIR = "galerias_clientes"
 if not os.path.exists(BASE_DIR):

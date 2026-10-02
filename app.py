@@ -136,7 +136,8 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
                 st.success(f"¡Éxito! Galería '{nombre_evento}' creada correctamente.")
             else:
                 st.error("Por favor completa el nombre, la contraseña y sube al menos una foto.")
-        
+
+        st.markdown("---")
                      # --- HISTORIAL DE ÁLBUMES ENTREGADOS ---
         st.markdown("---")
         st.subheader("📁 Historial de Trabajos Entregados")

@@ -54,13 +54,19 @@ def registrar_usuario(usuario, password):
     with open(USUARIOS_FILE, "w") as f:
         json.dump(usuarios, f)
 
-def guardar_info_evento(nombre_evento, datos):
-    ruta_info = os.path.join(BASE_DIR, nombre_evento, "info.json")
+def obtener_ruta_usuario(usuario):
+    ruta_usr = os.path.join(BASE_DIR, usuario.lower())
+    os.makedirs(ruta_usr, exist_ok=True)
+    return ruta_usr
+
+def guardar_info_evento(usuario, nombre_evento, datos):
+    ruta_usr = obtener_ruta_usuario(usuario)
+    ruta_info = os.path.join(ruta_usr, nombre_evento, "info.json")
     with open(ruta_info, "w") as f:
         json.dump(datos, f)
 
-def obtener_info_evento(nombre_evento):
-    ruta_info = os.path.join(BASE_DIR, nombre_evento, "info.json")
+def obtener_info_evento_por_ruta(ruta_evento):
+    ruta_info = os.path.join(ruta_evento, "info.json")
     if os.path.exists(ruta_info):
         with open(ruta_info, "r") as f:
             return json.load(f)

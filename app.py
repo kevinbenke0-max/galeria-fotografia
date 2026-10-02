@@ -138,7 +138,7 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
                 st.error("Por favor completa el nombre, la contraseña y sube al menos una foto.")
 
         st.markdown("---")
-                     # --- HISTORIAL DE ÁLBUMES ENTREGADOS ---
+                             # --- HISTORIAL DE ÁLBUMES ENTREGADOS ---
         st.markdown("---")
         st.subheader("📁 Historial de Trabajos Entregados")
         
@@ -152,10 +152,12 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
                 
                 st.write(f"📷 Total de fotos en **{album_ver}**: {len(fotos_album)}")
                 
-                cols_historial = st.columns(3)
+                # Definimos 4 columnas para miniaturas más pequeñas
+                cols_historial = st.columns(4)
                 for idx, foto in enumerate(fotos_album):
-                    col = cols_historial[idx % 3]
+                    col = cols_historial[idx % 4]
                     ruta_img = os.path.join(ruta_album, foto)
+                    # Al mover el cursor o presionar la foto, Streamlit habilita el botón nativo para ver a pantalla completa
                     col.image(Image.open(ruta_img), caption=foto, use_container_width=True)
         else:
             st.info("Aún no has creado ninguna galería.")

@@ -115,9 +115,7 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
             else:
                 st.sidebar.error("Completa todos los campos.")
 
-    if usuario_autenticado:
-        st.header(f"📸 Panel de Control - {usuario_actual}")
-        if usuario_autenticado:
+         if usuario_autenticado:
         st.header(f"📸 Panel de Control — {usuario_actual.capitalize()}")
         
         ruta_fotografo = obtener_ruta_usuario(usuario_actual)
@@ -166,7 +164,6 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
         else:
             st.info("Aún no tienes galerías creadas.")
 
-        # --- HISTORIAL DE ÁLBUMES ENTREGADOS DEL FOTÓGRAFO ---
         st.markdown("---")
         st.subheader("📁 Historial de Trabajos Entregados")
         
@@ -185,46 +182,6 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
                     col.image(Image.open(ruta_img), caption=foto, use_container_width=True)
         else:
             st.info("Aún no has creado ninguna galería.")
-            
-        st.markdown("---")
-        # --- HISTORIAL DE ÁLBUMES ENTREGADOS (VISTA EN 3 COLUMNAS) ---
-        st.markdown("---")
-        st.subheader("📁 Historial de Trabajos Entregados")
-        
-        eventos_historial = [f for f in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, f))]
-        
-        if eventos_historial:
-            album_ver = st.selectbox("Selecciona un álbum para revisar sus fotos:", eventos_historial, key="ver_historial")
-            if album_ver:
-                ruta_album = os.path.join(BASE_DIR, album_ver)
-                fotos_album = [f for f in os.listdir(ruta_album) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
-                
-                st.write(f"📷 Total de fotos en **{album_ver}**: {len(fotos_album)}")
-                
-                # Fila de 3 columnas para miniaturas compactas
-                cols_historial = st.columns(3)
-                for idx, foto in enumerate(fotos_album):
-                    col = cols_historial[idx % 3]
-                    ruta_img = os.path.join(ruta_album, foto)
-                    # Al tocar la miniatura en la app se puede ampliar a pantalla completa
-                    col.image(Image.open(ruta_img), caption=foto, use_container_width=True)
-        else:
-            st.info("Aún no has creado ninguna galería.")
-
-        eventos_existentes = [f for f in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, f))]
-        if eventos_existentes:
-            evento_revisar = st.selectbox("Selecciona un evento para ver las fotos elegidas por el cliente:", eventos_existentes)
-            if evento_revisar:
-                info = obtener_info_evento(evento_revisar)
-                favo = info.get("favoritas", [])
-                if favo:
-                    st.write(f"📌 El cliente seleccionó **{len(favo)}** foto(s) favorita(s):")
-                    for f in favo:
-                        st.write(f"- {f}")
-                else:
-                    st.info("El cliente aún no ha guardado su selección de favoritas.")
-    else:
-        st.info("👈 Por favor, inicia sesión o crea un nuevo perfil desde el menú lateral para gestionar tus galerías.")
 
                 # ==========================================
 # 2. PORTAL DEL CLIENTE

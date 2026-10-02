@@ -115,8 +115,8 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
             else:
                 st.sidebar.error("Completa todos los campos.")
                 
-        if usuario_autenticado:
-        st.header(f"📸 Panel de Control — {usuario_actual.capitalize()}") 
+            if usuario_autenticado:
+        st.header(f"📸 Panel de Control — {usuario_actual.capitalize()}")
         
         ruta_fotografo = obtener_ruta_usuario(usuario_actual)
         

@@ -139,7 +139,6 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
                 
         st.markdown("---")
         
-        st.subheader("📋 Ver Selección de Clientes")
                      # --- HISTORIAL DE ÁLBUMES ENTREGADOS ---
         st.markdown("---")
         st.subheader("📁 Historial de Trabajos Entregados")

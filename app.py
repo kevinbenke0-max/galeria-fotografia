@@ -117,6 +117,10 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
 
     if usuario_autenticado:
         st.header(f"📸 Panel de Control - {usuario_actual}")
+        if usuario_autenticado:
+        st.header(f"📸 Panel de Control — {usuario_actual.capitalize()}")
+        
+        ruta_fotografo = obtener_ruta_usuario(usuario_actual)
         
         st.subheader("Crear Nueva Galería de Cliente")
         nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda_Sofia_y_Lucas):").strip()
@@ -130,7 +134,7 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
         
         if st.button("Guardar y Crear Galería"):
             if nombre_evento and clave_evento and archivos_subidos:
-                ruta_evento = os.path.join(BASE_DIR, nombre_evento)
+                ruta_evento = os.path.join(ruta_fotografo, nombre_evento)
                 os.makedirs(ruta_evento, exist_ok=True)
                 
                 for archivo in archivos_subidos:
@@ -138,11 +142,50 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
                     with open(ruta_guardado, "wb") as f:
                         f.write(archivo.getbuffer())
                 
-                guardar_info_evento(nombre_evento, {"password": clave_evento, "favoritas": []})
+                guardar_info_evento(usuario_actual, nombre_evento, {"password": clave_evento, "favoritas": []})
                 st.success(f"¡Éxito! Galería '{nombre_evento}' creada correctamente.")
             else:
                 st.error("Por favor completa el nombre, la contraseña y sube al menos una foto.")
+                
+        st.markdown("---")
+        
+        st.subheader("📋 Ver Selección de Clientes")
+        eventos_existentes = [f for f in os.listdir(ruta_fotografo) if os.path.isdir(os.path.join(ruta_fotografo, f))]
+        if eventos_existentes:
+            evento_revisar = st.selectbox("Selecciona un evento para ver las fotos elegidas por el cliente:", eventos_existentes)
+            if evento_revisar:
+                ruta_ev = os.path.join(ruta_fotografo, evento_revisar)
+                info = obtener_info_evento_por_ruta(ruta_ev)
+                favo = info.get("favoritas", [])
+                if favo:
+                    st.write(f"📌 El cliente seleccionó **{len(favo)}** foto(s) favorita(s):")
+                    for f in favo:
+                        st.write(f"- {f}")
+                else:
+                    st.info("El cliente aún no ha guardado su selección de favoritas.")
+        else:
+            st.info("Aún no tienes galerías creadas.")
 
+        # --- HISTORIAL DE ÁLBUMES ENTREGADOS DEL FOTÓGRAFO ---
+        st.markdown("---")
+        st.subheader("📁 Historial de Trabajos Entregados")
+        
+        if eventos_existentes:
+            album_ver = st.selectbox("Selecciona un álbum para revisar sus fotos:", eventos_existentes, key="ver_historial")
+            if album_ver:
+                ruta_album = os.path.join(ruta_fotografo, album_ver)
+                fotos_album = [f for f in os.listdir(ruta_album) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+                
+                st.write(f"📷 Total de fotos en **{album_ver}**: {len(fotos_album)}")
+                
+                cols_historial = st.columns(3)
+                for idx, foto in enumerate(fotos_album):
+                    col = cols_historial[idx % 3]
+                    ruta_img = os.path.join(ruta_album, foto)
+                    col.image(Image.open(ruta_img), caption=foto, use_container_width=True)
+        else:
+            st.info("Aún no has creado ninguna galería.")
+            
         st.markdown("---")
         # --- HISTORIAL DE ÁLBUMES ENTREGADOS (VISTA EN 3 COLUMNAS) ---
         st.markdown("---")

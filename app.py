@@ -140,12 +140,14 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
         st.markdown("---")
         
         st.subheader("📋 Ver Selección de Clientes")
-                # --- HISTORIAL DE ÁLBUMES ENTREGADOS ---
+                     # --- HISTORIAL DE ÁLBUMES ENTREGADOS ---
         st.markdown("---")
         st.subheader("📁 Historial de Trabajos Entregados")
         
-        if eventos_existentes:
-            album_ver = st.selectbox("Selecciona un álbum para revisar sus fotos:", eventos_existentes, key="ver_historial")
+        eventos_historial = [f for f in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, f))]
+        
+        if eventos_historial:
+            album_ver = st.selectbox("Selecciona un álbum para revisar sus fotos:", eventos_historial, key="ver_historial")
             if album_ver:
                 ruta_album = os.path.join(BASE_DIR, album_ver)
                 fotos_album = [f for f in os.listdir(ruta_album) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
@@ -159,6 +161,7 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
                     col.image(Image.open(ruta_img), caption=foto, use_container_width=True)
         else:
             st.info("Aún no has creado ninguna galería.")
+
         eventos_existentes = [f for f in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, f))]
         if eventos_existentes:
             evento_revisar = st.selectbox("Selecciona un evento para ver las fotos elegidas por el cliente:", eventos_existentes)

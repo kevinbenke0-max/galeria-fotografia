@@ -198,23 +198,34 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
 else:
     st.header("🖼️ Tu Galería Privada")
     
-    eventos_disponibles = [folder for folder in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, folder))]
-    
-    if not eventos_disponibles:
+        # Mapear todos los eventos de todos los fotógrafos
+    mapa_eventos = {}
+    if os.path.exists(BASE_DIR):
+        for usr in os.listdir(BASE_DIR):
+            ruta_usr = os.path.join(BASE_DIR, usr)
+            if os.path.isdir(ruta_usr):
+                for ev in os.listdir(ruta_usr):
+                    ruta_ev = os.path.join(ruta_usr, ev)
+                    if os.path.isdir(ruta_ev):
+                        mapa_eventos[ev] = ruta_ev
+
+    if not mapa_eventos:
         st.info("Aún no hay galerías disponibles.")
     else:
-        evento_seleccionado = st.selectbox("Selecciona tu evento / proyecto:", eventos_disponibles)
-        
+        evento_seleccionado = st.selectbox("Selecciona tu evento / proyecto:", sorted(list(mapa_eventos.keys())))
+
         if evento_seleccionado:
-            info_evento = obtener_info_evento(evento_seleccionado)
+            ruta_galeria = mapa_eventos[evento_seleccionado]
+            info_evento = obtener_info_evento_por_ruta(ruta_galeria)
             clave_correcta = info_evento.get("password", "")
-            
+
             clave_ingresada = st.text_input("Ingresa tu clave de acceso:", type="password")
-            
-            if clave_correcta and clave_ingresada != clave_correcta:
+
+            if not clave_correcta or clave_ingresada != clave_correcta:
                 st.warning("🔒 Por favor ingresa la contraseña correcta para ver esta galería.")
             else:
                 st.success("🔓 Acceso concedido")
+
                 
                 ruta_galeria = os.path.join(BASE_DIR, evento_seleccionado)
                 fotos = [f for f in os.listdir(ruta_galeria) if f.lower().endswith(('jpg', 'jpeg', 'png'))]

@@ -226,10 +226,8 @@ else:
             else:
                 st.success("🔓 Acceso concedido")
 
-                
-                ruta_galeria = os.path.join(BASE_DIR, evento_seleccionado)
                 fotos = [f for f in os.listdir(ruta_galeria) if f.lower().endswith(('jpg', 'jpeg', 'png'))]
-                
+
                 st.subheader(f"Fotos de: {evento_seleccionado} ({len(fotos)} imágenes)")
                 
                 # Botón de Descarga ZIP

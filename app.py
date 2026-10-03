@@ -222,36 +222,34 @@ else:
 
             clave_ingresada = st.text_input("Ingresa tu clave de acceso:", type="password")
 
-            if not clave_correcta or clave_ingresada != clave_correcta:
-                st.warning("🔒 Por favor ingresa la contraseña correcta para ver esta galería.")
-            else:
-                st.success("🔓 Acceso concedido")
+    if clave_ingresada != clave_correcta:
+        st.warning("🔒 Por favor ingresa la contraseña correcta para ver esta galería.")
+    else:
+        st.success("🔓 Acceso concedido")
 
-                fotos = [f for f in os.listdir(ruta_galeria) if f.lower().endswith(('jpg', 'jpeg', 'png'))]
+        fotos = [f for f in os.listdir(ruta_galeria) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+        st.subheader(f"🖼️ Fotos de: {evento_seleccionado} ({len(fotos)} imágenes)")
 
-                st.subheader(f"Fotos de: {evento_seleccionado} ({len(fotos)} imágenes)")
-                
-                # Botón de Descarga ZIP
-                buffer_zip = io.BytesIO()
-                with zipfile.ZipFile(buffer_zip, "w") as zf:
-                    for foto in fotos:
-                        ruta_foto = os.path.join(ruta_galeria, foto)
-                        zf.write(ruta_foto, arcname=foto)
-                buffer_zip.seek(0)
-                
-                st.download_button(
-                    label="📦 Descargar Galería Completa (.ZIP)",
-                    data=buffer_zip,
-                    file_name=f"{evento_seleccionado}_alta_resolucion.zip",
-                    mime="application/zip",
-                    use_container_width=True
-                )
-                
-                st.markdown("---")
-                
+        # Botón de Descarga ZIP
+        buffer_zip = io.BytesIO()
+        with zipfile.ZipFile(buffer_zip, "w") as zf:
+            for foto in fotos:
+                ruta_foto = os.path.join(ruta_galeria, foto)
+                zf.write(ruta_foto, arcname=foto)
+        buffer_zip.seek(0)
+
+        st.download_button(
+            label="📦 Descargar Galería Completa (.ZIP)",
+            data=buffer_zip,
+            file_name=f"{evento_seleccionado}_alta_resolucion.zip",
+            mime="application/zip",
+            use_container_width=True
+        )
+
+        st.markdown("---")
+
         # Mostrar fotos y capturar selección
         columnas = st.columns(3)
-        favoritas_seleccionadas = []
 
         for index, foto in enumerate(fotos):
             ruta_foto = os.path.join(ruta_galeria, foto)
@@ -279,7 +277,9 @@ else:
                         favs_actuales.remove(foto)
 
                     info_evento["favoritas"] = favs_actuales
-                    guardar_info_evento(ruta_galeria, info_evento)
+                    ruta_json = os.path.join(ruta_galeria, "info.json")
+                    with open(ruta_json, "w", encoding="utf-8") as f:
+                        json.dump(info_evento, f, ensure_ascii=False, indent=4)
                     st.rerun()
 
                 with open(ruta_foto, "rb") as file_data:

@@ -249,44 +249,44 @@ else:
                 
                 st.markdown("---")
                 
-                # Mostrar fotos y capturar selección
-                columnas = st.columns(3)
-                favoritas_seleccionadas = []
-                
-                for index, foto in enumerate(fotos):
-                    ruta_foto = os.path.join(ruta_galeria, foto)
-                    col = columnas[index % 3]
-                    
-        with col:
-            imagen = Image.open(ruta_foto)
-            st.image(imagen, use_container_width=True)
+        # Mostrar fotos y capturar selección
+        columnas = st.columns(3)
+        favoritas_seleccionadas = []
 
-            # Cargar los datos del evento antes de usarlos
-            info_evento = obtener_info_evento_por_ruta(ruta_galeria)
-            if not isinstance(info_evento, dict):
-                info_evento = {}
+        for index, foto in enumerate(fotos):
+            ruta_foto = os.path.join(ruta_galeria, foto)
+            col = columnas[index % 3]
 
-            favs_actuales = info_evento.get("favoritas", [])
-            es_fav_previo = foto in favs_actuales
+            with col:
+                imagen = Image.open(ruta_foto)
+                st.image(imagen, use_container_width=True)
 
-            es_fav = st.checkbox("❤️ Favorita", value=es_fav_previo, key=f"fav_{index}")
+                # Cargar los datos del evento
+                info_evento = obtener_info_evento_por_ruta(ruta_galeria)
+                if not isinstance(info_evento, dict):
+                    info_evento = {}
 
-            # Guardado automático al presionar la casilla
-            if es_fav != es_fav_previo:
-                if es_fav and foto not in favs_actuales:
-                    favs_actuales.append(foto)
-                elif not es_fav and foto in favs_actuales:
-                    favs_actuales.remove(foto)
+                favs_actuales = info_evento.get("favoritas", [])
+                es_fav_previo = foto in favs_actuales
 
-                info_evento["favoritas"] = favs_actuales
-                guardar_info_evento(ruta_galeria, info_evento)
-                st.rerun()
+                es_fav = st.checkbox("❤️ Favorita", value=es_fav_previo, key=f"fav_{index}")
 
-            with open(ruta_foto, "rb") as file_data:
-                st.download_button(
-                    label="📥 Descargar",
-                    data=file_data,
-                    file_name=foto,
-                    mime="image/jpeg",
-                    key=f"dl_{index}"
-                )
+                # Guardado automático en tiempo real
+                if es_fav != es_fav_previo:
+                    if es_fav and foto not in favs_actuales:
+                        favs_actuales.append(foto)
+                    elif not es_fav and foto in favs_actuales:
+                        favs_actuales.remove(foto)
+
+                    info_evento["favoritas"] = favs_actuales
+                    guardar_info_evento(ruta_galeria, info_evento)
+                    st.rerun()
+
+                with open(ruta_foto, "rb") as file_data:
+                    st.download_button(
+                        label="📥 Descargar",
+                        data=file_data,
+                        file_name=foto,
+                        mime="image/jpeg",
+                        key=f"dl_{index}"
+                    )

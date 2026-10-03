@@ -260,17 +260,31 @@ else:
                     with col:
                         imagen = Image.open(ruta_foto)
                         st.image(imagen, use_container_width=True)
-                        
-                        es_fav = st.checkbox("❤️ Favorita", key=f"fav_{index}")
-                        if es_fav:
-                            favoritas_seleccionadas.append(foto)
-                        
+
+                        # Verificar si la foto ya estaba guardada como favorita anteriormente
+                        favs_actuales = info_evento.get("favoritas", [])
+                        es_fav_previo = foto in favs_actuales
+
+                        es_fav = st.checkbox("❤️ Favorita", value=es_fav_previo, key=f"fav_{index}")
+
+                        # Si el cliente cambia el estado del checkbox
+                        if es_fav != es_fav_previo:
+                            if es_fav and foto not in favs_actuales:
+                                favs_actuales.append(foto)
+                            elif not es_fav and foto in favs_actuales:
+                                favs_actuales.remove(foto)
+
+                            # Actualizar JSON en el disco inmediatamente
+                            info_evento["favoritas"] = favs_actuales
+                            guardar_info_evento(ruta_galeria, info_evento)
+                            st.rerun()
+
                         with open(ruta_foto, "rb") as file_data:
                             st.download_button(
-                                label="⬇️ Descargar",
+                                label="📥 Descargar",
                                 data=file_data,
                                 file_name=foto,
                                 mime="image/jpeg",
                                 key=f"dl_{index}"
                             )
-                
+

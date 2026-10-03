@@ -165,7 +165,7 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
             st.info("Aún no tienes galerías creadas.")
 
         st.markdown("---")
-                st.subheader("📁 Historial de Trabajos Entregados")
+        st.subheader("📁 Historial de Trabajos Entregados")
         
         if eventos_existentes:
             album_ver = st.selectbox("Selecciona un álbum para revisar sus fotos:", eventos_existentes, key="ver_historial")

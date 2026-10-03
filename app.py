@@ -261,11 +261,11 @@ else:
                         imagen = Image.open(ruta_foto)
                         st.image(imagen, use_container_width=True)
 
-                        # Validación para evitar TypeError si la variable viene vacía
-                        if not isinstance(informacion_evento, dict):
-                            informacion_evento = {}
+                        # Usamos info_evento que es el nombre real de tu variable
+                        if not isinstance(info_evento, dict):
+                            info_evento = {}
 
-                        favs_actuales = informacion_evento.get("favoritas", [])
+                        favs_actuales = info_evento.get("favoritas", [])
                         es_fav_previo = foto in favs_actuales
 
                         es_fav = st.checkbox("❤️ Favorita", value=es_fav_previo, key=f"fav_{index}")
@@ -277,8 +277,8 @@ else:
                             elif not es_fav and foto in favs_actuales:
                                 favs_actuales.remove(foto)
 
-                            informacion_evento["favoritas"] = favs_actuales
-                            guardar_info_evento(ruta_galeria, informacion_evento)
+                            info_evento["favoritas"] = favs_actuales
+                            guardar_info_evento(ruta_galeria, info_evento)
                             st.rerun()
 
                         with open(ruta_foto, "rb") as file_data:

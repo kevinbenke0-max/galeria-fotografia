@@ -274,7 +274,7 @@ else:
                             )
                 
                 st.markdown("---")
-                if st.button("📩 Enviar / Guardar Selección de Favoritas"):
-                    info_evento["favoritas"] = favoritas_seleccionadas
-                    guardar_info_evento(evento_seleccionado, info_evento)
-                    st.success(f"¡Selección guardada! Elegiste {len(favoritas_seleccionadas)} foto(s). La fotógrafa ya puede verlas en su panel.")
+                            if st.button("📩 Enviar / Guardar Selección de Favoritas"):
+                info_evento["favoritas"] = favoritas_seleccionadas
+                guardar_info_evento(ruta_galeria, info_evento)
+                st.success(f"¡Selección guardada! Elegiste {len(favoritas_seleccionadas)} foto(s). La fotógrafa ya puede verlas.")

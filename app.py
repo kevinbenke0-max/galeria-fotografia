@@ -165,7 +165,7 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
             st.info("Aún no tienes galerías creadas.")
 
         st.markdown("---")
-        st.subheader("📁 Historial de Trabajos Entregados")
+                st.subheader("📁 Historial de Trabajos Entregados")
         
         if eventos_existentes:
             album_ver = st.selectbox("Selecciona un álbum para revisar sus fotos:", eventos_existentes, key="ver_historial")
@@ -175,6 +175,14 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
                 
                 st.write(f"📷 Total de fotos en **{album_ver}**: {len(fotos_album)}")
                 
+                # Botón de eliminación con confirmación
+                with st.expander("⚠️ Zona de Peligro: Borrar esta galería"):
+                    st.warning(f"¿Estás seguro/a de que deseas eliminar permanentemente la galería **'{album_ver}'**? Esta acción no se puede deshacer.")
+                    if st.button("🗑️ Eliminar Galería Completa", key=f"del_{album_ver}"):
+                        shutil.rmtree(ruta_album)
+                        st.success(f"La galería '{album_ver}' ha sido eliminada.")
+                        st.rerun()
+
                 cols_historial = st.columns(3)
                 for idx, foto in enumerate(fotos_album):
                     col = cols_historial[idx % 3]

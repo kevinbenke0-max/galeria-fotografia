@@ -155,10 +155,16 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
                 ruta_ev = os.path.join(ruta_fotografo, evento_revisar)
                 info = obtener_info_evento_por_ruta(ruta_ev)
                 favo = info.get("favoritas", [])
-                if favo:
-                    st.write(f"📌 El cliente seleccionó **{len(favo)}** foto(s) favorita(s):")
-                    for f in favo:
-                        st.write(f"- {f}")
+            if favo:
+                st.write(f"📌 El cliente seleccionó **{len(favo)}** foto(s) favorita(s):")
+                cols_fav = st.columns(4)
+                for idx, f in enumerate(favo):
+                    ruta_fav = os.path.join(ruta_ev, f)
+                    col = cols_fav[idx % 4]
+                    if os.path.exists(ruta_fav):
+                        col.image(Image.open(ruta_fav), caption=f, use_container_width=True)
+                    else:
+                        col.write(f"- {f}")
                 else:
                     st.info("El cliente aún no ha guardado su selección de favoritas.")
                     

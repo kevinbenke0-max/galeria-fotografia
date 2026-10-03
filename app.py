@@ -146,21 +146,7 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
                 st.error("Por favor completa el nombre, la contraseña y sube al menos una foto.")
                 
         st.markdown("---")
-        
-        st.subheader("📋 Ver Selección de Clientes")
-        eventos_existentes = [f for f in os.listdir(ruta_fotografo) if os.path.isdir(os.path.join(ruta_fotografo, f))]
-        if eventos_existentes:
-            evento_revisar = st.selectbox("Selecciona un evento para ver las fotos elegidas por el cliente:", eventos_existentes)
-            if evento_revisar:
-                ruta_ev = os.path.join(ruta_fotografo, evento_revisar)
-                info = obtener_info_evento_por_ruta(ruta_ev)
-                favo = info.get("favoritas", [])
-                if favo:
-                    st.write(f"📌 El cliente seleccionó **{len(favo)}** foto(s) favorita(s):")
-                    for f in favo:
-                        st.write(f"- {f}")
-                else:
-                    st.info("El cliente aún no ha guardado su selección de favoritas.")
+
         else:
             st.info("Aún no tienes galerías creadas.")
 

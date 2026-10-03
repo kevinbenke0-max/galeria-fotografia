@@ -115,7 +115,7 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
             else:
                 st.sidebar.error("Completa todos los campos.")
                 
-            if usuario_autenticado:
+    if usuario_autenticado:
         st.header(f"📸 Panel de Control — {usuario_actual.capitalize()}")
         
         ruta_fotografo = obtener_ruta_usuario(usuario_actual)
@@ -182,6 +182,7 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
                     col.image(Image.open(ruta_img), caption=foto, use_container_width=True)
         else:
             st.info("Aún no has creado ninguna galería.")
+
 
                 # ==========================================
 # 2. PORTAL DEL CLIENTE

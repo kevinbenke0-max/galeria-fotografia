@@ -8,6 +8,34 @@ import streamlit as st
 from PIL import Image
 
 st.set_page_config(page_title="Galería Fotográfica", layout="wide")
+st.markdown(
+    """
+    <style>
+    /* Fondo principal blanco */
+    .stApp {
+        background-color: #FFFFFF !important;
+    }
+    
+    /* Texto principal negro */
+    .stApp, .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp label, .stApp span {
+        color: #000000 !important;
+    }
+
+    /* Fondo y texto de los cuadros de entrada de texto (Inputs) */
+    .stTextInput input {
+        background-color: #F0F2F6 !important;
+        color: #000000 !important;
+        border: 1px solid #CCCCCC !important;
+    }
+
+    /* Fondo de la barra lateral si la utilizas */
+    [data-testid="stSidebar"] {
+        background-color: #F8F9FA !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 BASE_DIR = "galerias_clientes"
 if not os.path.exists(BASE_DIR):

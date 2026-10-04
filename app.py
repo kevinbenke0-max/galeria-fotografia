@@ -11,7 +11,6 @@ st.set_page_config(page_title="Galería Fotográfica", layout="wide")
 
 # Estilos estéticos de tipografía y tema claro minimalista
 st.markdown(
-st.markdown(
     """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Montserrat:wght@300;400&display=swap');
@@ -100,7 +99,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
 
 BASE_DIR = "galerias_clientes"
 if not os.path.exists(BASE_DIR):

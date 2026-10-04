@@ -1,3 +1,13 @@
+import streamlit as st
+import os
+import base64
+import json
+import io
+import zipfile
+from PIL import Image
+
+st.set_page_config(page_title="Galería Fotográfica", layout="wide")
+
 st.markdown(
     """
     <style>
@@ -34,7 +44,7 @@ st.markdown(
         color: #333333 !important;
     }
 
-    /* 6. Botones principales (Ej: Guardar y Crear Galería) */
+    /* 6. Botones principales */
     .stButton > button {
         background-color: #E0E0E0 !important;
         color: #111111 !important;
@@ -49,6 +59,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 BASE_DIR = "galerias_clientes"
 if not os.path.exists(BASE_DIR):

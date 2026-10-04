@@ -11,17 +11,17 @@ st.set_page_config(page_title="Galería Fotográfica", layout="wide")
 
 # Estilos estéticos de tipografía y tema claro minimalista
 st.markdown(
+st.markdown(
     """
     <style>
-    /* Importar fuente serif minimalista elegante */
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Montserrat:wght@300;400&display=swap');
 
-    /* Fondo general totalmente limpio */
-    .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
+    /* Fondo principal y barra lateral */
+    .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"], [data-testid="stSidebar"] {
         background-color: #FFFFFF !important;
     }
 
-    /* Tipografía para títulos y encabezados (estilo editorial) */
+    /* Tipografía para títulos */
     h1, h2, h3, h4, h5, h6 {
         font-family: 'Cormorant Garamond', Georgia, serif !important;
         font-weight: 400 !important;
@@ -29,20 +29,35 @@ st.markdown(
         color: #1A1A1A !important;
     }
 
-    /* Textos generales y etiquetas */
+    /* Textos generales, etiquetas y radio buttons */
     p, label, span, div, input, button {
         font-family: 'Montserrat', sans-serif !important;
         letter-spacing: 0.5px !important;
         color: #222222 !important;
     }
 
-    /* Campos de entrada de texto (Inputs) */
+    /* Campos de entrada de texto */
     .stTextInput input {
         background-color: #FAFAFA !important;
         color: #111111 !important;
         border: 1px solid #E0E0E0 !important;
         border-radius: 0px !important;
         padding: 10px !important;
+    }
+
+    /* Icono del ojito en el campo de contraseña */
+    [data-testid="stTextInput"] button {
+        background-color: transparent !important;
+        color: #111111 !important;
+        border: none !important;
+    }
+    [data-testid="stTextInput"] button * {
+        color: #111111 !important;
+    }
+
+    /* Radio buttons (Opciones de selección) */
+    [data-testid="stRadio"] label, [data-testid="stRadio"] div[role="radiogroup"] * {
+        color: #111111 !important;
     }
 
     /* Menú desplegable (Selectbox) */
@@ -53,7 +68,7 @@ st.markdown(
         border-radius: 0px !important;
     }
 
-    /* Caja de carga de archivos (File Uploader) */
+    /* Caja de carga de archivos */
     [data-testid="stFileUploader"] section {
         background-color: #FAFAFA !important;
         border: 1px dashed #CCCCCC !important;
@@ -63,7 +78,7 @@ st.markdown(
         color: #444444 !important;
     }
 
-    /* Botones oscuros y elegantes estilo marca de fotografía */
+    /* Botones principales estilo editorial */
     .stButton > button {
         background-color: #2B2B2B !important;
         color: #FFFFFF !important;
@@ -85,6 +100,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 BASE_DIR = "galerias_clientes"
 if not os.path.exists(BASE_DIR):

@@ -6,60 +6,85 @@ import io
 import zipfile
 from PIL import Image
 
+# Configuración de página
 st.set_page_config(page_title="Galería Fotográfica", layout="wide")
 
+# Estilos estéticos de tipografía y tema claro minimalista
 st.markdown(
     """
     <style>
-    /* 1. Fondo principal de la app */
-    .stApp, [data-testid="stAppViewContainer"] {
+    /* Importar fuente serif minimalista elegante */
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Montserrat:wght@300;400&display=swap');
+
+    /* Fondo general totalmente limpio */
+    .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
         background-color: #FFFFFF !important;
     }
 
-    /* 2. Textos, títulos y etiquetas */
-    .stApp, .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp label, .stApp span, .stApp div {
-        color: #111111 !important;
+    /* Tipografía para títulos y encabezados (estilo editorial) */
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Cormorant Garamond', Georgia, serif !important;
+        font-weight: 400 !important;
+        letter-spacing: 2px !important;
+        color: #1A1A1A !important;
     }
 
-    /* 3. Campos de entrada de texto (Inputs) */
+    /* Textos generales y etiquetas */
+    p, label, span, div, input, button {
+        font-family: 'Montserrat', sans-serif !important;
+        letter-spacing: 0.5px !important;
+        color: #222222 !important;
+    }
+
+    /* Campos de entrada de texto (Inputs) */
     .stTextInput input {
-        background-color: #F0F2F6 !important;
+        background-color: #FAFAFA !important;
         color: #111111 !important;
-        border: 1px solid #CCCCCC !important;
+        border: 1px solid #E0E0E0 !important;
+        border-radius: 0px !important;
+        padding: 10px !important;
     }
 
-    /* 4. Menú desplegable (Selectbox) */
+    /* Menú desplegable (Selectbox) */
     [data-testid="stSelectbox"] > div > div {
-        background-color: #F0F2F6 !important;
+        background-color: #FAFAFA !important;
         color: #111111 !important;
-        border: 1px solid #CCCCCC !important;
+        border: 1px solid #E0E0E0 !important;
+        border-radius: 0px !important;
     }
 
-    /* 5. Recuadro de Subir Archivos (File Uploader) */
+    /* Caja de carga de archivos (File Uploader) */
     [data-testid="stFileUploader"] section {
-        background-color: #F8F9FA !important;
+        background-color: #FAFAFA !important;
         border: 1px dashed #CCCCCC !important;
+        border-radius: 0px !important;
     }
     [data-testid="stFileUploader"] section * {
-        color: #333333 !important;
+        color: #444444 !important;
     }
 
-    /* 6. Botones principales */
+    /* Botones oscuros y elegantes estilo marca de fotografía */
     .stButton > button {
-        background-color: #E0E0E0 !important;
-        color: #111111 !important;
-        border: 1px solid #BBBBBB !important;
-        font-weight: bold !important;
+        background-color: #2B2B2B !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 0px !important;
+        font-family: 'Montserrat', sans-serif !important;
+        font-size: 13px !important;
+        letter-spacing: 2px !important;
+        text-transform: uppercase !important;
+        padding: 12px 24px !important;
+        transition: background-color 0.3s ease !important;
     }
+    
     .stButton > button:hover {
-        background-color: #D0D0D0 !important;
-        color: #000000 !important;
+        background-color: #000000 !important;
+        color: #FFFFFF !important;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
-
 
 BASE_DIR = "galerias_clientes"
 if not os.path.exists(BASE_DIR):

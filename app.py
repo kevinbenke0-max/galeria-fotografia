@@ -1,36 +1,49 @@
-import os
-import base64
-import json
-import zipfile
-import io
-import shutil
-import streamlit as st
-from PIL import Image
-
-st.set_page_config(page_title="Galería Fotográfica", layout="wide")
 st.markdown(
     """
     <style>
-    /* Fondo principal blanco */
-    .stApp {
+    /* 1. Fondo principal de la app */
+    .stApp, [data-testid="stAppViewContainer"] {
         background-color: #FFFFFF !important;
     }
-    
-    /* Texto principal negro */
-    .stApp, .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp label, .stApp span {
-        color: #000000 !important;
+
+    /* 2. Textos, títulos y etiquetas */
+    .stApp, .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp label, .stApp span, .stApp div {
+        color: #111111 !important;
     }
 
-    /* Fondo y texto de los cuadros de entrada de texto (Inputs) */
+    /* 3. Campos de entrada de texto (Inputs) */
     .stTextInput input {
         background-color: #F0F2F6 !important;
-        color: #000000 !important;
+        color: #111111 !important;
         border: 1px solid #CCCCCC !important;
     }
 
-    /* Fondo de la barra lateral si la utilizas */
-    [data-testid="stSidebar"] {
+    /* 4. Menú desplegable (Selectbox) */
+    [data-testid="stSelectbox"] > div > div {
+        background-color: #F0F2F6 !important;
+        color: #111111 !important;
+        border: 1px solid #CCCCCC !important;
+    }
+
+    /* 5. Recuadro de Subir Archivos (File Uploader) */
+    [data-testid="stFileUploader"] section {
         background-color: #F8F9FA !important;
+        border: 1px dashed #CCCCCC !important;
+    }
+    [data-testid="stFileUploader"] section * {
+        color: #333333 !important;
+    }
+
+    /* 6. Botones principales (Ej: Guardar y Crear Galería) */
+    .stButton > button {
+        background-color: #E0E0E0 !important;
+        color: #111111 !important;
+        border: 1px solid #BBBBBB !important;
+        font-weight: bold !important;
+    }
+    .stButton > button:hover {
+        background-color: #D0D0D0 !important;
+        color: #000000 !important;
     }
     </style>
     """,

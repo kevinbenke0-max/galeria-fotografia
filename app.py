@@ -285,7 +285,7 @@ else:
                     except Exception as e:
                         col.error(f"Error al cargar {foto}")
                     
-                                st.markdown("---")
+                st.markdown("---")
 
                 # BUCLE ÚNICO: Se ejecuta 1 sola vez por foto
                 columnas = st.columns(3)

@@ -4,6 +4,7 @@ import base64
 import json
 import io
 import zipfile
+import shutil
 from PIL import Image
 
 # Configuración de la página

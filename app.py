@@ -272,21 +272,6 @@ else:
 
                 st.markdown("---")
 
-                # Mostrar fotos en cuadrícula con orientación corregida
-                columnas = st.columns(3)
-                for index, foto in enumerate(fotos):
-                    ruta_foto = os.path.join(ruta_galeria, foto)
-                    col = columnas[index % 3]
-                    
-                    try:
-                        img = Image.open(ruta_foto)
-                        img = ImageOps.exif_transpose(img)  # Orienta la foto correctamente
-                        col.image(img, caption=foto, use_container_width=True)
-                    except Exception as e:
-                        col.error(f"Error al cargar {foto}")
-                    
-                st.markdown("---")
-
                 # BUCLE ÚNICO: Se ejecuta 1 sola vez por foto
                 columnas = st.columns(3)
 

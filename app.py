@@ -192,7 +192,7 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
                 st.write(f"📷 Total de fotos en **{album_ver}**: {len(fotos_album)}")
                 
                 # Botón de eliminación con confirmación
-                with st.expander("⚠️ Zona de Peligro: Borrar esta galería"):
+                with st.expander("Borrar esta galería"):
                     st.warning(f"¿Estás seguro/a de que deseas eliminar permanentemente la galería **'{album_ver}'**? Esta acción no se puede deshacer.")
                     if st.button("🗑️ Eliminar Galería Completa", key=f"del_{album_ver}"):
                         shutil.rmtree(ruta_album)
@@ -252,7 +252,7 @@ else:
                     and not f.startswith('.')
                 ]
 
-                st.subheader(f"🖼️ Fotos de: {evento_seleccionado} ({len(fotos)} imágenes)")
+                st.subheader(f"Fotos de: {evento_seleccionado} ({len(fotos)} imágenes)")
 
                 # Botón de Descarga ZIP
                 buffer_zip = io.BytesIO()

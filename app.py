@@ -285,47 +285,47 @@ else:
                     except Exception as e:
                         col.error(f"Error al cargar {foto}")
                     
-        st.markdown("---")
+                st.markdown("---")
 
-        # Mostrar fotos y capturar selección
-        columnas = st.columns(3)
+                # Mostrar fotos y capturar selección
+                columnas = st.columns(3)
 
-        for index, foto in enumerate(fotos):
-            ruta_foto = os.path.join(ruta_galeria, foto)
-            col = columnas[index % 3]
+                for index, foto in enumerate(fotos):
+                    ruta_foto = os.path.join(ruta_galeria, foto)
+                    col = columnas[index % 3]
 
-            with col:
-                imagen = Image.open(ruta_foto)
-                st.image(imagen, use_container_width=True)
+                    with col:
+                        imagen = Image.open(ruta_foto)
+                        imagen = ImageOps.exif_transpose(imagen)  # <--- CORRIGE LA ROTACIÓN
+                        st.image(imagen, use_container_width=True)
 
-                # Cargar los datos del evento
-                info_evento = obtener_info_evento_por_ruta(ruta_galeria)
-                if not isinstance(info_evento, dict):
-                    info_evento = {}
+                        # Cargar los datos del evento
+                        info_evento = obtener_info_evento_por_ruta(ruta_galeria)
+                        if not isinstance(info_evento, dict):
+                            info_evento = {}
 
-                favs_actuales = info_evento.get("favoritas", [])
-                es_fav_previo = foto in favs_actuales
+                        favs_actuales = info_evento.get("favoritas", [])
+                        es_fav_previo = foto in favs_actuales
 
-                es_fav = st.checkbox("❤️ Favorita", value=es_fav_previo, key=f"fav_{index}")
+                        es_fav = st.checkbox("❤️ Favorita", value=es_fav_previo, key=f"fav_{index}")
 
-                # Guardado automático en tiempo real
-                if es_fav != es_fav_previo:
-                    if es_fav and foto not in favs_actuales:
-                        favs_actuales.append(foto)
-                    elif not es_fav and foto in favs_actuales:
-                        favs_actuales.remove(foto)
+                        # Guardar automáticamente en json
+                        if es_fav != es_fav_previo:
+                            if es_fav and foto not in favs_actuales:
+                                favs_actuales.append(foto)
+                            elif not es_fav and foto in favs_actuales:
+                                favs_actuales.remove(foto)
 
-                    info_evento["favoritas"] = favs_actuales
-                    ruta_json = os.path.join(ruta_galeria, "info.json")
-                    with open(ruta_json, "w", encoding="utf-8") as f:
-                        json.dump(info_evento, f, ensure_ascii=False, indent=4)
-                    st.rerun()
+                            info_evento["favoritas"] = favs_actuales
+                            ruta_json = os.path.join(ruta_galeria, "info.json")
+                            with open(ruta_json, "w", encoding="utf-8") as f:
+                                json.dump(info_evento, f, ensure_ascii=False, indent=4)
 
-                with open(ruta_foto, "rb") as file_data:
-                    st.download_button(
-                        label="📥 Descargar",
-                        data=file_data,
-                        file_name=foto,
-                        mime="image/jpeg",
-                        key=f"dl_{index}"
-                    )
+                        with open(ruta_foto, "rb") as file_data:
+                            st.download_button(
+                                label="📥 Descargar",
+                                data=file_data,
+                                file_name=foto,
+                                mime="image/jpeg",
+                                key=f"dl_{index}"
+                            )

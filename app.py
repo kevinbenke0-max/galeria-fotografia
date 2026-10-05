@@ -252,7 +252,7 @@ else:
                     and not f.startswith('.')
                 ]
 
-                st.subheader(f"Fotos de: {evento_seleccionado} ({len(fotos)} imágenes)")
+                st.subheader(f"Albúm: {evento_seleccionado} ({len(fotos)} imágenes)")
 
                 # Botón de Descarga ZIP
                 buffer_zip = io.BytesIO()

@@ -174,8 +174,6 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
                         col.image(Image.open(ruta_fav), caption=f, use_container_width=True)
                     else:
                         col.write(f"- {f}")
-                else:
-                    st.info("El cliente aún no ha guardado su selección de favoritas.")
                     
         else:
             st.info("Aún no tienes galerías creadas.")

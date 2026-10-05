@@ -244,7 +244,14 @@ else:
             else:
                 st.success("🔓 Acceso concedido")
 
-                fotos = [f for f in os.listdir(ruta_galeria) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+                # Obtener la lista de fotos ignorando ocultas o temporales
+                todos_los_archivos = sorted(os.listdir(ruta_galeria))
+                fotos = [
+                    f for f in todos_los_archivos 
+                    if f.lower().endswith(('.jpg', '.jpeg', '.png', '.webp')) 
+                    and not f.startswith('.')
+                ]
+
                 st.subheader(f"🖼️ Fotos de: {evento_seleccionado} ({len(fotos)} imágenes)")
 
                 # Botón de Descarga ZIP
@@ -265,16 +272,18 @@ else:
 
                 st.markdown("---")
 
-                # Mostrar fotos con corrección de orientación vertical/horizontal
+                # Mostrar fotos en cuadrícula con orientación corregida
                 columnas = st.columns(3)
                 for index, foto in enumerate(fotos):
                     ruta_foto = os.path.join(ruta_galeria, foto)
                     col = columnas[index % 3]
                     
-                    img = Image.open(ruta_foto)
-                    img = ImageOps.exif_transpose(img)  # Corregir orientación de la foto
-                    
-                    col.image(img, caption=foto, use_container_width=True)
+                    try:
+                        img = Image.open(ruta_foto)
+                        img = ImageOps.exif_transpose(img)  # Orienta la foto correctamente
+                        col.image(img, caption=foto, use_container_width=True)
+                    except Exception as e:
+                        col.error(f"Error al cargar {foto}")
                     
         st.markdown("---")
 

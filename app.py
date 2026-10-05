@@ -285,9 +285,9 @@ else:
                     except Exception as e:
                         col.error(f"Error al cargar {foto}")
                     
-                st.markdown("---")
+                                st.markdown("---")
 
-                # Mostrar fotos y capturar selección
+                # BUCLE ÚNICO: Se ejecuta 1 sola vez por foto
                 columnas = st.columns(3)
 
                 for index, foto in enumerate(fotos):
@@ -295,11 +295,12 @@ else:
                     col = columnas[index % 3]
 
                     with col:
+                        # 1. Cargar y corregir orientación
                         imagen = Image.open(ruta_foto)
-                        imagen = ImageOps.exif_transpose(imagen)  # <--- CORRIGE LA ROTACIÓN
+                        imagen = ImageOps.exif_transpose(imagen)
                         st.image(imagen, use_container_width=True)
 
-                        # Cargar los datos del evento
+                        # 2. Cargar datos para Favoritas
                         info_evento = obtener_info_evento_por_ruta(ruta_galeria)
                         if not isinstance(info_evento, dict):
                             info_evento = {}
@@ -307,9 +308,10 @@ else:
                         favs_actuales = info_evento.get("favoritas", [])
                         es_fav_previo = foto in favs_actuales
 
-                        es_fav = st.checkbox("❤️ Favorita", value=es_fav_previo, key=f"fav_{index}")
+                        # 3. Checkbox de Favorita
+                        es_fav = st.checkbox("❤️ Favorita", value=es_fav_previo, key=f"fav_{index}_{foto}")
 
-                        # Guardar automáticamente en json
+                        # 4. Guardar selección en info.json
                         if es_fav != es_fav_previo:
                             if es_fav and foto not in favs_actuales:
                                 favs_actuales.append(foto)
@@ -321,11 +323,12 @@ else:
                             with open(ruta_json, "w", encoding="utf-8") as f:
                                 json.dump(info_evento, f, ensure_ascii=False, indent=4)
 
+                        # 5. Botón de Descarga individual
                         with open(ruta_foto, "rb") as file_data:
                             st.download_button(
                                 label="📥 Descargar",
                                 data=file_data,
                                 file_name=foto,
                                 mime="image/jpeg",
-                                key=f"dl_{index}"
+                                key=f"dl_{index}_{foto}"
                             )

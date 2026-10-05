@@ -230,36 +230,43 @@ else:
     else:
         evento_seleccionado = st.selectbox("Selecciona tu evento / proyecto:", sorted(list(mapa_eventos.keys())))
 
-        if evento_seleccionado:
-            ruta_galeria = mapa_eventos[evento_seleccionado]
-            info_evento = obtener_info_evento_por_ruta(ruta_galeria)
-            clave_correcta = info_evento.get("password", "")
+if not mapa_eventos:
+    st.info("Aún no hay galerías disponibles.")
+else:
+    evento_seleccionado = st.selectbox("Selecciona tu evento / proyecto:", sorted(list(mapa_eventos.keys())))
 
-            clave_ingresada = st.text_input("Ingresa tu clave de acceso:", type="password")
+    if evento_seleccionado:
+        ruta_galeria = mapa_eventos[evento_seleccionado]
+        info_evento = obtener_info_evento_por_ruta(ruta_galeria)
+        clave_correcta = info_evento.get("password", "")
 
-    if clave_ingresada != clave_correcta:
-        st.warning("🔒 Por favor ingresa la contraseña correcta para ver esta galería.")
-    else:
-        st.success("🔓 Acceso concedido")
+        clave_ingresada = st.text_input("Ingresa tu clave de acceso:", type="password")
 
-        fotos = [f for f in os.listdir(ruta_galeria) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
-        st.subheader(f"🖼️ Fotos de: {evento_seleccionado} ({len(fotos)} imágenes)")
+        if not clave_ingresada:
+            st.info("🔑 Por favor ingresa la contraseña para ver esta galería.")
+        elif clave_ingresada != clave_correcta:
+            st.error("🔒 Contraseña incorrecta. Intenta de nuevo.")
+        else:
+            st.success("🔓 Acceso concedido")
 
-        # Botón de Descarga ZIP
-        buffer_zip = io.BytesIO()
-        with zipfile.ZipFile(buffer_zip, "w") as zf:
-            for foto in fotos:
-                ruta_foto = os.path.join(ruta_galeria, foto)
-                zf.write(ruta_foto, arcname=foto)
-        buffer_zip.seek(0)
+            fotos = [f for f in os.listdir(ruta_galeria) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+            st.subheader(f"🖼️ Fotos de: {evento_seleccionado} ({len(fotos)} imágenes)")
 
-        st.download_button(
-            label="📦 Descargar Galería Completa (.ZIP)",
-            data=buffer_zip,
-            file_name=f"{evento_seleccionado}_alta_resolucion.zip",
-            mime="application/zip",
-            use_container_width=True
-        )
+            # Botón de Descarga ZIP
+            buffer_zip = io.BytesIO()
+            with zipfile.ZipFile(buffer_zip, "w") as zf:
+                for foto in fotos:
+                    ruta_foto = os.path.join(ruta_galeria, foto)
+                    zf.write(ruta_foto, arcname=foto)
+            buffer_zip.seek(0)
+
+            st.download_button(
+                label="📦 Descargar Galería Completa (.ZIP)",
+                data=buffer_zip,
+                file_name=f"{evento_seleccionado}_alta_resolucion.zip",
+                mime="application/zip",
+                use_container_width=True
+            )
 
         st.markdown("---")
 

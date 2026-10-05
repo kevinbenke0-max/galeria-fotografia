@@ -263,6 +263,19 @@ else:
                     use_container_width=True
                 )
 
+                st.markdown("---")
+
+                # Mostrar fotos con corrección de orientación vertical/horizontal
+                columnas = st.columns(3)
+                for index, foto in enumerate(fotos):
+                    ruta_foto = os.path.join(ruta_galeria, foto)
+                    col = columnas[index % 3]
+                    
+                    img = Image.open(ruta_foto)
+                    img = ImageOps.exif_transpose(img)  # Corregir orientación de la foto
+                    
+                    col.image(img, caption=foto, use_container_width=True)
+
         st.markdown("---")
 
         # Mostrar fotos y capturar selección

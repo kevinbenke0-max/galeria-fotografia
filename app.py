@@ -5,7 +5,7 @@ import json
 import io
 import zipfile
 import shutil
-from PIL import Image, ImageOps
+from PIL import Image
 
 # Configuración de la página
 st.set_page_config(page_title="Galería Fotográfica", layout="wide")

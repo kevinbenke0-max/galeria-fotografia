@@ -6,99 +6,41 @@ import io
 import zipfile
 from PIL import Image
 
-# Configuración de página
+# Configuración de la página
 st.set_page_config(page_title="Galería Fotográfica", layout="wide")
 
-# Estilos estéticos de tipografía y tema claro minimalista
-st.markdown(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Montserrat:wght@300;400&display=swap');
+# Función para aplicar la imagen de fondo
+def set_bg_hack(main_bg):
+    if os.path.exists(main_bg):
+        with open(main_bg, "rb") as f:
+            encoded_string = base64.b64encode(f.read()).decode()
+        st.markdown(
+            f"""
+            <style>
+            .stApp {{
+                background-image: url("data:image/png;base64,{encoded_string}");
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+            }}
+            
+            /* Mantener el fondo transparente para que se vea la imagen */
+            [data-testid="stHeader"], [data-testid="stAppViewContainer"] {{
+                background-color: transparent !important;
+            }}
 
-    /* Fondo principal y barra lateral */
-    .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"], [data-testid="stSidebar"] {
-        background-color: #FFFFFF !important;
-    }
+            /* Forzar texto blanco para contraste sobre el fondo */
+            .stApp, .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp label, .stApp span, .stApp div {{
+                color: #FFFFFF !important;
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
 
-    /* Tipografía para títulos */
-    h1, h2, h3, h4, h5, h6 {
-        font-family: 'Cormorant Garamond', Georgia, serif !important;
-        font-weight: 400 !important;
-        letter-spacing: 2px !important;
-        color: #1A1A1A !important;
-    }
-
-    /* Textos generales, etiquetas y radio buttons */
-    p, label, span, div, input, button {
-        font-family: 'Montserrat', sans-serif !important;
-        letter-spacing: 0.5px !important;
-        color: #222222 !important;
-    }
-
-    /* Campos de entrada de texto */
-    .stTextInput input {
-        background-color: #FAFAFA !important;
-        color: #111111 !important;
-        border: 1px solid #E0E0E0 !important;
-        border-radius: 0px !important;
-        padding: 10px !important;
-    }
-
-    /* Icono del ojito en el campo de contraseña */
-    [data-testid="stTextInput"] button {
-        background-color: transparent !important;
-        color: #111111 !important;
-        border: none !important;
-    }
-    [data-testid="stTextInput"] button * {
-        color: #111111 !important;
-    }
-
-    /* Radio buttons (Opciones de selección) */
-    [data-testid="stRadio"] label, [data-testid="stRadio"] div[role="radiogroup"] * {
-        color: #111111 !important;
-    }
-
-    /* Menú desplegable (Selectbox) */
-    [data-testid="stSelectbox"] > div > div {
-        background-color: #FAFAFA !important;
-        color: #111111 !important;
-        border: 1px solid #E0E0E0 !important;
-        border-radius: 0px !important;
-    }
-
-    /* Caja de carga de archivos */
-    [data-testid="stFileUploader"] section {
-        background-color: #FAFAFA !important;
-        border: 1px dashed #CCCCCC !important;
-        border-radius: 0px !important;
-    }
-    [data-testid="stFileUploader"] section * {
-        color: #444444 !important;
-    }
-
-    /* Botones principales estilo editorial */
-    .stButton > button {
-        background-color: #2B2B2B !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        border-radius: 0px !important;
-        font-family: 'Montserrat', sans-serif !important;
-        font-size: 13px !important;
-        letter-spacing: 2px !important;
-        text-transform: uppercase !important;
-        padding: 12px 24px !important;
-        transition: background-color 0.3s ease !important;
-    }
-    
-    .stButton > button:hover {
-        background-color: #000000 !important;
-        color: #FFFFFF !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+# Aplicar la imagen de fondo elegida
+set_bg_hack("fondo.jpeg")
 
 BASE_DIR = "galerias_clientes"
 if not os.path.exists(BASE_DIR):

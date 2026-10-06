@@ -93,41 +93,59 @@ if modo == "Panel Fotógrafa (Cargar Fotos)":
     opcion_cuenta = st.sidebar.radio("Acceso Fotógrafos:", ["Iniciar Sesión", "Crear Nuevo Perfil"])
     usuarios_db = cargar_usuarios()
     
-    usuario_autenticado = False
-    usuario_actual = ""
+# Usamos st.session_state para recordar el inicio de sesión
+if "usuario_autenticado" not in st.session_state:
+    st.session_state["usuario_autenticado"] = False
+if "usuario_actual" not in st.session_state:
+    st.session_state["usuario_actual"] = ""
 
-    if opcion_cuenta == "Iniciar Sesión":
-        st.sidebar.subheader("🔑 Iniciar Sesión")
-        u_input = st.sidebar.text_input("Usuario:", key="login_user").strip()
-        p_input = st.sidebar.text_input("Contraseña:", type="password", key="login_pass").strip()
-        
-        if u_input and p_input:
-            if u_input.lower() in usuarios_db and usuarios_db[u_input.lower()] == p_input:
-                st.sidebar.success(f"¡Bienvenido/a, {u_input}!")
-                usuario_autenticado = True
-                usuario_actual = u_input
-            else:
-                st.sidebar.error("Usuario o contraseña incorrectos")
+if opcion_cuenta == "Iniciar Sesión":
+    st.sidebar.subheader("🔑 Iniciar Sesión")
+    u_input = st.sidebar.text_input("Usuario:", key="login_user").strip()
+    p_input = st.sidebar.text_input("Contraseña:", type="password", key="login_pass").strip()
 
-    elif opcion_cuenta == "Crear Nuevo Perfil":
-        st.sidebar.subheader("📝 Registrar Fotógrafo/a")
-        nuevo_u = st.sidebar.text_input("Nuevo Usuario:", key="reg_user").strip()
-        nuevo_p = st.sidebar.text_input("Nueva Contraseña:", type="password", key="reg_pass").strip()
-        
-        if st.sidebar.button("Registrar Perfil"):
-            if nuevo_u and nuevo_p:
-                if nuevo_u.lower() in usuarios_db:
-                    st.sidebar.warning("El usuario ya existe. Intenta con otro nombre.")
-                else:
-                    registrar_usuario(nuevo_u, nuevo_p)
-                    st.sidebar.success("¡Perfil creado con éxito! Ahora ve a 'Iniciar Sesión'.")
+    if u_input and p_input:
+        if u_input.lower() in usuarios_db and usuarios_db[u_input.lower()] == p_input:
+            st.session_state["usuario_autenticado"] = True
+            st.session_state["usuario_actual"] = u_input
+            st.rerun()  # Recarga la app inmediatamente para pasar al panel
+        else:
+            st.sidebar.error("Usuario o contraseña incorrectos")
+
+elif opcion_cuenta == "Crear Nuevo Perfil":
+    st.sidebar.subheader("👤 Registrar Fotógrafo/a")
+    nuevo_u = st.sidebar.text_input("Nuevo Usuario:", key="reg_user").strip()
+    nuevo_p = st.sidebar.text_input("Nueva Contraseña:", type="password", key="reg_pass").strip()
+
+    if st.sidebar.button("Registrar Perfil"):
+        if nuevo_u and nuevo_p:
+            if nuevo_u.lower() in usuarios_db:
+                st.sidebar.warning("El usuario ya existe. Intenta con otro nombre.")
             else:
-                st.sidebar.error("Completa todos los campos.")
-                
-    if usuario_autenticado:
-        st.header(f"{usuario_actual.capitalize()}")
-        
-        ruta_fotografo = obtener_ruta_usuario(usuario_actual)
+                registrar_usuario(nuevo_u, nuevo_p)
+                st.sidebar.success("¡Perfil creado con éxito! Ahora ve a 'Iniciar Sesión'.")
+        else:
+            st.sidebar.error("Completa todos los campos.")
+
+# Mostrar Panel de Fotógrafo si la sesión está activa
+if st.session_state["usuario_autenticado"]:
+    usuario_actual = st.session_state["usuario_actual"]
+    
+    # Botón para salir en la barra lateral
+    st.sidebar.markdown("---")
+    st.sidebar.success(f"Sesión activa: {usuario_actual}")
+    if st.sidebar.button("Cerrar Sesión"):
+        st.session_state["usuario_autenticado"] = False
+        st.session_state["usuario_actual"] = ""
+        st.rerun()
+
+    st.header(f"📷 Panel de {usuario_actual.capitalize()}")
+
+    ruta_fotografo = obtener_ruta_usuario(usuario_actual)
+
+    st.subheader("Crear Nueva Galería de Cliente")
+    nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda Sofia y Lucas):").strip()
+    clave_evento = st.text_input("Contraseña de acceso para el cliente:", type="password").strip()
         
         st.subheader("Crear Nueva Galería de Cliente")
         nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda_Sofia_y_Lucas):").strip()

@@ -146,32 +146,28 @@ if st.session_state["usuario_autenticado"]:
     st.subheader("Crear Nueva Galería de Cliente")
     nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda Sofia y Lucas):").strip()
     clave_evento = st.text_input("Contraseña de acceso para el cliente:", type="password").strip()
-        
-        st.subheader("Crear Nueva Galería de Cliente")
-        nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda_Sofia_y_Lucas):").strip()
-        clave_evento = st.text_input("Contraseña de acceso para el cliente:", type="password").strip()
-        
-        archivos_subidos = st.file_uploader(
-            "Selecciona las fotos en alta resolución:",
-            type=["jpg", "jpeg", "png"],
-            accept_multiple_files=True
-        )
-        
-        if st.button("Guardar y Crear Galería"):
-            if nombre_evento and clave_evento and archivos_subidos:
-                ruta_evento = os.path.join(ruta_fotografo, nombre_evento)
-                os.makedirs(ruta_evento, exist_ok=True)
-                
-                for archivo in archivos_subidos:
-                    ruta_guardado = os.path.join(ruta_evento, archivo.name)
-                    with open(ruta_guardado, "wb") as f:
-                        f.write(archivo.getbuffer())
-                
-                guardar_info_evento(usuario_actual, nombre_evento, {"password": clave_evento, "favoritas": []})
-                st.success(f"¡Éxito! Galería '{nombre_evento}' creada correctamente.")
-            else:
-                st.error("Por favor completa el nombre, la contraseña y sube al menos una foto.")
-                
+
+    archivos_subidos = st.file_uploader(
+        "Selecciona las fotos en alta resolución:",
+        type=["jpg", "jpeg", "png"],
+        accept_multiple_files=True
+    )
+
+    if st.button("Guardar y Crear Galería"):
+        if nombre_evento and clave_evento and archivos_subidos:
+            ruta_evento = os.path.join(ruta_fotografo, nombre_evento)
+            os.makedirs(ruta_evento, exist_ok=True)
+
+            for archivo in archivos_subidos:
+                ruta_guardado = os.path.join(ruta_evento, archivo.name)
+                with open(ruta_guardado, "wb") as f:
+                    f.write(archivo.getbuffer())
+
+            guardar_info_evento(usuario_actual, nombre_evento, {"password": clave_evento, "favoritas": []})
+            st.success(f"¡Éxito! Galería '{nombre_evento}' creada correctamente.")
+        else:
+            st.error("Por favor completa el nombre, la contraseña y sube al menos una foto.")
+            
         st.markdown("---")
 
         st.subheader("📋 Ver Selección de Clientes")

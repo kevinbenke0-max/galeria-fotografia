@@ -27,10 +27,10 @@ def set_bg_hack(main_bg):
             }}
             
             /* Mantener el fondo transparente para que se vea la imagen */
-            [data-testid="stHeader"], [data-testid="stAppViewContainer"] {{
+            [data-testid="stHeader"], [data-testid="stBottomContainer"] {{
                 background-color: transparent !important;
             }}
-
+            
             /* Forzar texto blanco para contraste sobre el fondo */
             .stApp, .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp label, .stApp span, .stApp div {{
                 color: #FFFFFF !important;
@@ -41,16 +41,17 @@ def set_bg_hack(main_bg):
         )
 
 # Aplicar la imagen de fondo elegida
-set_bg_hack("fondo.jpeg")
+set_bg_hack("fondo.jpg")
 
 BASE_DIR = "galerias_clientes"
 if not os.path.exists(BASE_DIR):
     os.makedirs(BASE_DIR)
+
 USUARIOS_FILE = "usuarios.json"
 
 def cargar_usuarios():
     if not os.path.exists(USUARIOS_FILE):
-        usuarios_iniciales = {"camila": "151124"}
+        usuarios_iniciales = {"admin": "1234", "fotografo1": "1234"}
         with open(USUARIOS_FILE, "w") as f:
             json.dump(usuarios_iniciales, f)
         return usuarios_iniciales
@@ -83,148 +84,144 @@ def obtener_info_evento_por_ruta(ruta_evento):
 
 st.title("📸 Sistema de Gestión y Entrega Fotográfica")
 
-modo = st.sidebar.radio("Navegación", ["Panel Fotógrafa (Cargar Fotos)", "Portal Cliente (Ver y Descargar)"])
-# ==========================================
+modo = st.sidebar.radio("Navegación", ["Panel Fotógrafo (Cargar Fotos)", "Portal Cliente (Ver y Descargar)"])
+
 # 1. PANEL DE FOTÓGRAFOS (SOLO ESTA PARTE)
-# ==========================================
-if modo == "Panel Fotógrafa (Cargar Fotos)":
+if modo == "Panel Fotógrafo (Cargar Fotos)":
     st.sidebar.markdown("---")
-    
+
     opcion_cuenta = st.sidebar.radio("Acceso Fotógrafos:", ["Iniciar Sesión", "Crear Nuevo Perfil"])
     usuarios_db = cargar_usuarios()
-    
-# Usamos st.session_state para recordar el inicio de sesión
-if "usuario_autenticado" not in st.session_state:
-    st.session_state["usuario_autenticado"] = False
-if "usuario_actual" not in st.session_state:
-    st.session_state["usuario_actual"] = ""
 
-if opcion_cuenta == "Iniciar Sesión":
-    st.sidebar.subheader("🔑 Iniciar Sesión")
-    u_input = st.sidebar.text_input("Usuario:", key="login_user").strip()
-    p_input = st.sidebar.text_input("Contraseña:", type="password", key="login_pass").strip()
-
-    if u_input and p_input:
-        if u_input.lower() in usuarios_db and usuarios_db[u_input.lower()] == p_input:
-            st.session_state["usuario_autenticado"] = True
-            st.session_state["usuario_actual"] = u_input
-            st.rerun()  # Recarga la app inmediatamente para pasar al panel
-        else:
-            st.sidebar.error("Usuario o contraseña incorrectos")
-
-elif opcion_cuenta == "Crear Nuevo Perfil":
-    st.sidebar.subheader("👤 Registrar Fotógrafo/a")
-    nuevo_u = st.sidebar.text_input("Nuevo Usuario:", key="reg_user").strip()
-    nuevo_p = st.sidebar.text_input("Nueva Contraseña:", type="password", key="reg_pass").strip()
-
-    if st.sidebar.button("Registrar Perfil"):
-        if nuevo_u and nuevo_p:
-            if nuevo_u.lower() in usuarios_db:
-                st.sidebar.warning("El usuario ya existe. Intenta con otro nombre.")
-            else:
-                registrar_usuario(nuevo_u, nuevo_p)
-                st.sidebar.success("¡Perfil creado con éxito! Ahora ve a 'Iniciar Sesión'.")
-        else:
-            st.sidebar.error("Completa todos los campos.")
-
-# Mostrar Panel de Fotógrafo si la sesión está activa
-if st.session_state["usuario_autenticado"]:
-    usuario_actual = st.session_state["usuario_actual"]
-    
-    # Botón para salir en la barra lateral
-    st.sidebar.markdown("---")
-    st.sidebar.success(f"Sesión activa: {usuario_actual}")
-    if st.sidebar.button("Cerrar Sesión"):
+    # Usamos st.session_state para mantener el estado de sesión
+    if "usuario_autenticado" not in st.session_state:
         st.session_state["usuario_autenticado"] = False
+    if "usuario_actual" not in st.session_state:
         st.session_state["usuario_actual"] = ""
-        st.rerun()
 
-    st.header(f"📷 Panel de {usuario_actual.capitalize()}")
+    if opcion_cuenta == "Iniciar Sesión":
+        st.sidebar.subheader("🔑 Iniciar Sesión")
+        u_input = st.sidebar.text_input("Usuario:", key="login_user").strip()
+        p_input = st.sidebar.text_input("Contraseña:", type="password", key="login_pass").strip()
 
-    ruta_fotografo = obtener_ruta_usuario(usuario_actual)
+        if u_input and p_input:
+            if u_input.lower() in usuarios_db and usuarios_db[u_input.lower()] == p_input:
+                st.session_state["usuario_autenticado"] = True
+                st.session_state["usuario_actual"] = u_input
+                st.rerun() # Recarga la app inmediatamente para pasar al panel
+            else:
+                st.sidebar.error("Usuario o contraseña incorrectos")
 
-    st.subheader("Crear Nueva Galería de Cliente")
-    nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda Sofia y Lucas):").strip()
-    clave_evento = st.text_input("Contraseña de acceso para el cliente:", type="password").strip()
+    elif opcion_cuenta == "Crear Nuevo Perfil":
+        st.sidebar.subheader("👤 Registrar Fotógrafo/a")
+        nuevo_u = st.sidebar.text_input("Nuevo Usuario:", key="reg_user").strip()
+        nuevo_p = st.sidebar.text_input("Nueva Contraseña:", type="password", key="reg_pass").strip()
 
-    archivos_subidos = st.file_uploader(
-        "Selecciona las fotos en alta resolución:",
-        type=["jpg", "jpeg", "png"],
-        accept_multiple_files=True
-    )
+        if st.sidebar.button("Registrar Perfil"):
+            if nuevo_u and nuevo_p:
+                if nuevo_u.lower() in usuarios_db:
+                    st.sidebar.warning("El usuario ya existe. Intenta con otro nombre.")
+                else:
+                    registrar_usuario(nuevo_u, nuevo_p)
+                    st.sidebar.success("¡Perfil creado con éxito! Ahora ve a 'Iniciar Sesión'.")
+            else:
+                st.sidebar.error("Completa todos los campos.")
 
-    if st.button("Guardar y Crear Galería"):
-        if nombre_evento and clave_evento and archivos_subidos:
-            ruta_evento = os.path.join(ruta_fotografo, nombre_evento)
-            os.makedirs(ruta_evento, exist_ok=True)
+    # Mostrar panel de fotógrafo si la sesión está activa
+    if st.session_state["usuario_autenticado"]:
+        usuario_actual = st.session_state["usuario_actual"]
 
-            for archivo in archivos_subidos:
-                ruta_guardado = os.path.join(ruta_evento, archivo.name)
-                with open(ruta_guardado, "wb") as f:
-                    f.write(archivo.getbuffer())
+        # Botón para salir en la barra lateral
+        st.sidebar.markdown("---")
+        st.sidebar.success(f"Sesión activa: {usuario_actual}")
+        if st.sidebar.button("Cerrar Sesión"):
+            st.session_state["usuario_autenticado"] = False
+            st.session_state["usuario_actual"] = ""
+            st.rerun()
 
-            guardar_info_evento(usuario_actual, nombre_evento, {"password": clave_evento, "favoritas": []})
-            st.success(f"¡Éxito! Galería '{nombre_evento}' creada correctamente.")
-        else:
-            st.error("Por favor completa el nombre, la contraseña y sube al menos una foto.")
-            
+        st.header(f"📷 Panel de {usuario_actual.capitalize()}")
+
+        ruta_fotografo = obtener_ruta_usuario(usuario_actual)
+
+        st.subheader("Crear Nueva Galería de Cliente")
+        nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda Sofia y Lucas):").strip()
+        clave_evento = st.text_input("Contraseña de acceso para el cliente:", type="password").strip()
+
+        archivos_subidos = st.file_uploader(
+            "Selecciona las fotos en alta resolución:",
+            type=["jpg", "jpeg", "png"],
+            accept_multiple_files=True
+        )
+
+        if st.button("Guardar y Crear Galería"):
+            if nombre_evento and clave_evento and archivos_subidos:
+                ruta_evento = os.path.join(ruta_fotografo, nombre_evento)
+                os.makedirs(ruta_evento, exist_ok=True)
+
+                for archivo in archivos_subidos:
+                    ruta_guardado = os.path.join(ruta_evento, archivo.name)
+                    with open(ruta_guardado, "wb") as f:
+                        f.write(archivo.getbuffer())
+
+                guardar_info_evento(usuario_actual, nombre_evento, {"password": clave_evento, "favoritas": []})
+                st.success(f"¡Éxito! Galería '{nombre_evento}' creada correctamente.")
+            else:
+                st.error("Por favor completa el nombre, la contraseña y sube al menos una foto.")
+
         st.markdown("---")
 
-        st.subheader("📋 Ver Selección de Clientes")
+        st.subheader("📌 Ver Selección de Clientes")
         eventos_existentes = [f for f in os.listdir(ruta_fotografo) if os.path.isdir(os.path.join(ruta_fotografo, f))]
         if eventos_existentes:
             evento_revisar = st.selectbox("Selecciona un evento para ver las fotos elegidas por el cliente:", eventos_existentes)
             if evento_revisar:
                 ruta_ev = os.path.join(ruta_fotografo, evento_revisar)
                 info = obtener_info_evento_por_ruta(ruta_ev)
-                favo = info.get("favoritas", [])
-            if favo:
-                st.write(f"📌 El cliente seleccionó **{len(favo)}** foto(s) favorita(s):")
+                favs = info.get("favoritas", [])
+
+                st.write(f"📌 El cliente seleccionó **{len(favs)}** foto(s) favorita(s):")
                 cols_fav = st.columns(4)
-                for idx, f in enumerate(favo):
+                for idx, f in enumerate(favs):
                     ruta_fav = os.path.join(ruta_ev, f)
                     col = cols_fav[idx % 4]
                     if os.path.exists(ruta_fav):
                         col.image(Image.open(ruta_fav), caption=f, use_container_width=True)
                     else:
-                        col.write(f"- {f}")
-                    
+                        col.write(f"📷 {f}")
         else:
             st.info("Aún no tienes galerías creadas.")
 
         st.markdown("---")
-        st.subheader("📁 Historial de Trabajos Entregados")
-        
+        st.subheader("📋 Historial de Trabajos Entregados")
+
         if eventos_existentes:
             album_ver = st.selectbox("Selecciona un álbum para revisar sus fotos:", eventos_existentes, key="ver_historial")
             if album_ver:
                 ruta_album = os.path.join(ruta_fotografo, album_ver)
                 fotos_album = [f for f in os.listdir(ruta_album) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
-                
+
                 st.write(f"📷 Total de fotos en **{album_ver}**: {len(fotos_album)}")
-                
+
                 # Botón de eliminación con confirmación
                 with st.expander("Borrar esta galería"):
-                    st.warning(f"¿Estás seguro/a de que deseas eliminar permanentemente la galería **'{album_ver}'**? Esta acción no se puede deshacer.")
-                    if st.button("🗑️ Eliminar Galería Completa", key=f"del_{album_ver}"):
+                    st.warning(f"¿Estás seguro/a de que deseas eliminar permanentemente la galería '{album_ver}'?")
+                    if st.button("🗑 Eliminar Galería Completa", key=f"del_{album_ver}"):
                         shutil.rmtree(ruta_album)
                         st.success(f"La galería '{album_ver}' ha sido eliminada.")
                         st.rerun()
 
-                cols_historial = st.columns(3)
+                cols_historial = st.columns(4)
                 for idx, foto in enumerate(fotos_album):
-                    col = cols_historial[idx % 3]
+                    col = cols_historial[idx % 4]
                     ruta_img = os.path.join(ruta_album, foto)
                     col.image(Image.open(ruta_img), caption=foto, use_container_width=True)
         else:
             st.info("Aún no has creado ninguna galería.")
 
-
-# =========================================================
-# 2. PORTAL DEL CLIENTE
-# =========================================================
+# 2. PORTAL DE CLIENTES
 else:
-    st.header("📸 Tu Galería Privada")
+    st.markdown("---")
+    st.header("🖼 Tu Galería Privada")
 
     # Mapear todos los eventos de todos los fotógrafos
     mapa_eventos = {}
@@ -254,29 +251,29 @@ else:
             elif clave_ingresada != clave_correcta:
                 st.error("🔒 Contraseña incorrecta. Intenta de nuevo.")
             else:
-                st.success("🔓 Acceso concedido")
+                st.success("🔓 ¡Acceso concedido!")
 
-                # Obtener la lista de fotos ignorando ocultas o temporales
-                todos_los_archivos = sorted(os.listdir(ruta_galeria))
+                # Obtener la lista de fotos ignorando archivos o temporales
+                todas_los_archivos = sorted(os.listdir(ruta_galeria))
                 fotos = [
-                    f for f in todos_los_archivos 
-                    if f.lower().endswith(('.jpg', '.jpeg', '.png', '.webp')) 
+                    f for f in todas_los_archivos
+                    if f.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))
                     and not f.startswith('.')
                 ]
 
-                st.subheader(f"Albúm: {evento_seleccionado} ({len(fotos)} imágenes)")
+                st.subheader(f"Álbum: {evento_seleccionado} ({len(fotos)} imágenes)")
 
-                # Botón de Descarga ZIP
-                buffer_zip = io.BytesIO()
-                with zipfile.ZipFile(buffer_zip, "w") as zf:
+                # Botón de descarga ZIP
+                buffer = io.BytesIO()
+                with zipfile.ZipFile(buffer, "w") as zip_file:
                     for foto in fotos:
                         ruta_foto = os.path.join(ruta_galeria, foto)
-                        zf.write(ruta_foto, arcname=foto)
-                buffer_zip.seek(0)
+                        zip_file.write(ruta_foto, arcname=foto)
+                buffer.seek(0)
 
                 st.download_button(
                     label="📦 Descargar Galería Completa (.ZIP)",
-                    data=buffer_zip,
+                    data=buffer,
                     file_name=f"{evento_seleccionado}_alta_resolucion.zip",
                     mime="application/zip",
                     use_container_width=True
@@ -305,7 +302,7 @@ else:
                         favs_actuales = info_evento.get("favoritas", [])
                         es_fav_previo = foto in favs_actuales
 
-                        # 3. Checkbox de Favorita
+                        # 3. Checkbox de favorita
                         es_fav = st.checkbox("❤️ Favorita", value=es_fav_previo, key=f"fav_{index}_{foto}")
 
                         # 4. Guardar selección en info.json
@@ -320,7 +317,7 @@ else:
                             with open(ruta_json, "w", encoding="utf-8") as f:
                                 json.dump(info_evento, f, ensure_ascii=False, indent=4)
 
-                        # 5. Botón de Descarga individual
+                        # 5. Botón de descarga individual
                         with open(ruta_foto, "rb") as file_data:
                             st.download_button(
                                 label="📥 Descargar",

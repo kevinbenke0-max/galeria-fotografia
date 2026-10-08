@@ -4,6 +4,7 @@ import json
 import io
 import zipfile
 import shutil
+import base64
 from PIL import Image, ImageOps
 
 # Configuración inicial
@@ -13,111 +14,11 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilo CSS para fondo blanco absoluto y limpio
-st.markdown(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Montserrat:wght@300;400;500;600&display=swap');
-    
-    html, body, .stApp, header, footer, [data-testid="stHeader"], [data-testid="stToolbar"] {
-        background-color: #FFFFFF !important;
-        color: #1A1A1A !important;
-        font-family: 'Montserrat', sans-serif !important;
-    }
-    
-    * {
-        color: #1A1A1A !important;
-        font-family: 'Montserrat', sans-serif !important;
-    }
-
-    .header-marca {
-        text-align: center;
-        padding: 25px 0 10px 0;
-        border-bottom: 1px solid #EAEAEA;
-        margin-bottom: 20px;
-    }
-    .titulo-marca {
-        font-family: 'Montserrat', sans-serif;
-        font-size: 22px;
-        font-weight: 500;
-        letter-spacing: 5px;
-        color: #1A1A1A !important;
-        text-transform: uppercase;
-    }
-    .subtitulo-marca {
-        font-family: 'Cormorant Garamond', serif;
-        font-size: 16px;
-        font-style: italic;
-        color: #777777 !important;
-        margin-top: 5px;
-    }
-
-    .card-blanca {
-        background-color: #FAFAFA !important;
-        border: 1px solid #E0E0E0 !important;
-        padding: 30px 20px;
-        border-radius: 6px;
-        text-align: center;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-        margin-bottom: 20px;
-    }
-    
-    div[data-baseweb="input"], input {
-        background-color: #FFFFFF !important;
-        color: #1A1A1A !important;
-        border: 1px solid #CCCCCC !important;
-        border-radius: 4px !important;
-    }
-
-    div[data-baseweb="input"] > div, button[aria-label="Show password"], button[aria-label="Hide password"] {
-        background-color: #FFFFFF !important;
-        color: #1A1A1A !important;
-    }
-
-    section[data-testid="stFileUploaderDropzone"] {
-        background-color: #FAFAFA !important;
-        border: 1px dashed #CCCCCC !important;
-    }
-    section[data-testid="stFileUploaderDropzone"] * {
-        background-color: transparent !important;
-        color: #1A1A1A !important;
-    }
-
-    [data-testid="stFileUploaderFileData"] {
-        background-color: #FFFFFF !important;
-        border: 1px solid #E0E0E0 !important;
-    }
-
-    button[data-testid="stBaseButton-primary"], .stButton > button, div[data-testid="stFormSubmitButton"] > button {
-        background-color: #1A1A1A !important;
-        color: #FFFFFF !important;
-        border-radius: 4px !important;
-        border: none !important;
-        font-family: 'Montserrat', sans-serif !important;
-        letter-spacing: 2px !important;
-        font-size: 12px !important;
-        padding: 12px 20px !important;
-        text-transform: uppercase !important;
-        margin-top: 10px !important;
-    }
-
-    div[data-testid="stFormSubmitButton"] > button * {
-        color: #FFFFFF !important;
-    }
-
-    [data-testid="stSidebar"] {
-        display: none !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
 BASE_DIR = "galerias_clientes"
 if not os.path.exists(BASE_DIR):
     os.makedirs(BASE_DIR)
 
-# Contraseña fija del panel de Camila
+# Contraseña de acceso al panel administrativo de Camila
 PASSWORD_FOTOGRAFA = "151124"
 
 def obtener_ruta_fotografo():
@@ -145,12 +46,16 @@ def obtener_info_evento_por_ruta(ruta_evento):
 if "fotografo_autenticado" not in st.session_state:
     st.session_state["fotografo_autenticado"] = False
 
+# Variables de estado para almacenar archivos subidos
+if "archivos_subidos_temp" not in st.session_state:
+    st.session_state["archivos_subidos_temp"] = []
+
 # --- ENCABEZADO PRINCIPAL ---
 st.markdown(
     """
-    <div class="header-marca">
-        <div class="titulo-marca">CAMY.INSTANTES.PH</div>
-        <div class="subtitulo-marca">Fotografía & Gestión de Entregas</div>
+    <div style="text-align: center; padding: 20px 0 10px 0; border-bottom: 1px solid #ddd; margin-bottom: 20px;">
+        <h2 style="font-family: sans-serif; letter-spacing: 4px; margin: 0;">CAMY.INSTANTES.PH</h2>
+        <p style="font-style: italic; color: #666; margin-top: 5px;">Fotografía & Gestión de Entregas</p>
     </div>
     """,
     unsafe_allow_html=True
@@ -203,9 +108,9 @@ with tab_cliente:
             if not st.session_state[key_acceso]:
                 st.markdown(
                     f"""
-                    <div class="card-blanca">
-                        <div style="font-size: 11px; letter-spacing: 3px; color: #888; text-transform: uppercase;">CAMY.INSTANTES.PH</div>
-                        <div style="font-family: 'Cormorant Garamond', serif; font-size: 38px; font-weight: 500; margin: 10px 0;">{evento_seleccionado.capitalize()}</div>
+                    <div style="border: 1px solid #eee; padding: 25px; text-align: center; border-radius: 8px; margin: 15px 0;">
+                        <span style="font-size: 11px; letter-spacing: 2px; color: #888;">CAMY.INSTANTES.PH</span>
+                        <h1 style="font-size: 36px; margin: 10px 0;">{evento_seleccionado.capitalize()}</h1>
                     </div>
                     """,
                     unsafe_allow_html=True
@@ -213,7 +118,7 @@ with tab_cliente:
 
                 clave_ingresada = st.text_input("Ingresa tu clave de acceso al álbum:", type="password", key=f"pass_{evento_seleccionado}")
 
-                if st.button("VER GALERÍA", use_container_width=True):
+                if st.button("VER GALERÍA", use_container_width=True, type="primary"):
                     if clave_ingresada == clave_correcta:
                         st.session_state[key_acceso] = True
                         st.rerun()
@@ -225,13 +130,14 @@ with tab_cliente:
                 st.markdown(
                     f"""
                     <div style="text-align: left; padding: 15px 0;">
-                        <span style="font-family: 'Cormorant Garamond', serif; font-size: 32px; color: #1a1a1a;">{evento_seleccionado.capitalize()}</span><br>
-                        <span style="font-size: 10px; letter-spacing: 2px; color: #666; text-transform: uppercase;">CAMY.INSTANTES.PH</span>
+                        <h2 style="margin:0;">{evento_seleccionado.capitalize()}</h2>
+                        <span style="font-size: 11px; letter-spacing: 2px; color: #666;">CAMY.INSTANTES.PH</span>
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
 
+                # Descarga ZIP completa
                 buffer = io.BytesIO()
                 with zipfile.ZipFile(buffer, "w") as zip_file:
                     for foto in fotos:
@@ -287,29 +193,22 @@ with tab_cliente:
                             )
 
 # =========================================================
-# 2. PANEL DE LA FOTÓGRAFA (PROTEGIDO)
+# 2. PANEL DE LA FOTÓGRAFA
 # =========================================================
 with tab_fotografo:
+    # --- PANTALLA DE LOGIN ---
     if not st.session_state["fotografo_autenticado"]:
-        st.markdown(
-            """
-            <div class="card-blanca">
-                <div style="font-size: 11px; letter-spacing: 2px; color: #888; text-transform: uppercase;">Acceso Restringido</div>
-                <div style="font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 500; margin-top: 5px;">Panel de Camila</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        st.subheader("🔑 Acceso Restringido - Panel de Camila")
+        p_input = st.text_input("Ingresa tu contraseña de Administradora:", type="password", key="pass_admin").strip()
 
-        p_input = st.text_input("Ingresa la contraseña de Administradora:", type="password", key="pass_admin").strip()
-
-        if st.button("INGRESAR AL PANEL", use_container_width=True):
+        if st.button("INGRESAR AL PANEL", use_container_width=True, type="primary"):
             if p_input == PASSWORD_FOTOGRAFA:
                 st.session_state["fotografo_autenticado"] = True
                 st.rerun()
             else:
                 st.error("Contraseña incorrecta.")
 
+    # --- PANEL ADMINISTRATIVO DENTRO DE SESIÓN ---
     else:
         col_admin1, col_admin2 = st.columns([3, 1])
         with col_admin1:
@@ -317,26 +216,57 @@ with tab_fotografo:
         with col_admin2:
             if st.button("🔴 CERRAR SESIÓN", use_container_width=True):
                 st.session_state["fotografo_autenticado"] = False
+                st.session_state["archivos_subidos_temp"] = []
                 st.rerun()
 
         ruta_fotografo = obtener_ruta_fotografo()
         st.markdown("---")
 
-        # --- SECCIÓN A: CARGAR ÁLBUM CON FORMULARIO PROTEGIDO ---
+        # --- SECCIÓN A: CARGAR ÁLBUM (CARGA MÚLTIPLE COMPATIBLE CON ANDROID) ---
         st.subheader("➕ Cargar Nuevo Álbum de Cliente")
         
-        with st.form("form_crear_galeria_album", clear_on_submit=True):
-            nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda Ayelen):").strip()
-            clave_evento = st.text_input("Contraseña de acceso para el cliente:", type="password").strip()
+        nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda Ayelen):").strip()
+        clave_evento = st.text_input("Contraseña de acceso para el cliente:", type="password").strip()
 
-            archivos_subidos = st.file_uploader(
-                "Selecciona las fotos del álbum:",
-                type=["jpg", "jpeg", "png", "webp"],
-                accept_multiple_files=True
-            )
+        st.write("📸 **Selecciona las fotos de tu álbum:**")
+        
+        # Componente de subida múltiple alternativo
+        archivos_cargados = st.file_uploader(
+            "Puedes seleccionar todas las fotos juntas de la galería:",
+            type=["jpg", "jpeg", "png", "webp"],
+            accept_multiple_files=True,
+            key=f"uploader_archivos_{nombre_evento}"
+        )
 
-            btn_guardar = st.form_submit_button("GUARDAR Y CREAR GALERÍA", use_container_width=True)
+        if archivos_cargados:
+            st.session_state["archivos_subidos_temp"] = archivos_cargados
+            st.success(f"📌 ¡Se han seleccionado **{len(archivos_cargados)}** foto(s) correctamente!")
 
-            if btn_guardar:
-                if nombre_evento and clave_evento and archivos_subidos:
-                    ruta_evento = os.path.join
+        if st.button("GUARDAR Y CREAR GALERÍA", type="primary", use_container_width=True):
+            archivos_a_guardar = st.session_state.get("archivos_subidos_temp", [])
+            if nombre_evento and clave_evento and archivos_a_guardar:
+                ruta_evento = os.path.join(ruta_fotografo, nombre_evento)
+                os.makedirs(ruta_evento, exist_ok=True)
+
+                for archivo in archivos_a_guardar:
+                    ruta_guardado = os.path.join(ruta_evento, archivo.name)
+                    with open(ruta_guardado, "wb") as f:
+                        f.write(archivo.getbuffer())
+
+                guardar_info_evento(nombre_evento, {"password": clave_evento, "favoritas": []})
+                st.session_state["archivos_subidos_temp"] = []
+                st.success(f"¡Éxito! El álbum '{nombre_evento}' fue creado con {len(archivos_a_guardar)} foto(s).")
+                st.rerun()
+            else:
+                st.error("Por favor completa el nombre, la contraseña y selecciona al menos una foto.")
+
+        st.markdown("---")
+
+        eventos_existentes = [f for f in os.listdir(ruta_fotografo) if os.path.isdir(os.path.join(ruta_fotografo, f))]
+
+        # --- SECCIÓN B: REVISAR FOTOS FAVORITAS ---
+        st.subheader("❤️ Fotos Favoritas Elegidas por el Cliente")
+        if eventos_existentes:
+            evento_fav_sel = st.selectbox("Selecciona un álbum para ver sus favoritas:", eventos_existentes, key="select_fav_album")
+            if evento_fav_sel:
+                ruta_ev = os.path.join(ruta_fotografo,

@@ -6,7 +6,7 @@ import zipfile
 import shutil
 from PIL import Image, ImageOps
 
-# Configuración inicial (inicia con el menú lateral cerrado)
+# Configuración inicial
 st.set_page_config(
     page_title="Panel de Fotografía",
     layout="wide",
@@ -72,7 +72,7 @@ tab_fotografo, tab_cliente = st.tabs(["📸 Panel Fotógrafa", "🖼 Portal Clie
 with tab_fotografo:
     usuarios_db = cargar_usuarios()
 
-    # --- PANTALLA DE ACCESO/LOGIN (SÓLO SE MUESTRA ESTO SI NO INICIÓ SESIÓN) ---
+    # --- ACCESO / LOGIN ---
     if not st.session_state["usuario_autenticado"]:
         st.subheader("🔑 Acceso al Panel")
         opcion_cuenta = st.radio("Elige una opción:", ["Iniciar Sesión", "Crear Nuevo Perfil"], horizontal=True)
@@ -106,7 +106,7 @@ with tab_fotografo:
                 else:
                     st.error("Completa todos los campos.")
 
-    # --- PANEL DENTRO DE LA SESIÓN (SÓLO APARECE LUEGO DE INGRESAR) ---
+    # --- DENTRO DE SESIÓN ---
     else:
         usuario_actual = st.session_state["usuario_actual"]
 
@@ -123,55 +123,42 @@ with tab_fotografo:
 
         st.markdown("---")
 
-        # --- SECCIÓN A: CREAR NUEVO ÁLBUM (CARGA MÚLTIPLE OPTIMIZADA) ---
+        # --- CREAR ÁLBUM CON FORMULARIO PROTEGIDO PARA ANDROID ---
         st.subheader("➕ Cargar Nuevo Álbum de Cliente")
-        nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda Ayelen):").strip()
-        clave_evento = st.text_input("Contraseña de acceso para el cliente:", type="password").strip()
+        
+        # El formulario evita que Streamlit se recargue en mitad de la carga múltiple de Android
+        with st.form("form_crear_album", clear_on_submit=True):
+            nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda Ayelen):").strip()
+            clave_evento = st.text_input("Contraseña de acceso para el cliente:", type="password").strip()
 
-        archivos_subidos = st.file_uploader(
-            "Selecciona las fotos del álbum:",
-            type=["jpg", "jpeg", "png", "webp"],
-            accept_multiple_files=True,
-            key="uploader_album"
-        )
+            archivos_subidos = st.file_uploader(
+                "Selecciona las fotos del álbum:",
+                type=["jpg", "jpeg", "png", "webp"],
+                accept_multiple_files=True
+            )
 
-        if "fotos_acumuladas" not in st.session_state:
-            st.session_state["fotos_acumuladas"] = []
+            btn_guardar = st.form_submit_button("Guardar y Crear Galería", type="primary", use_container_width=True)
 
-        if archivos_subidos:
-            for f in archivos_subidos:
-                if f not in st.session_state["fotos_acumuladas"]:
-                    st.session_state["fotos_acumuladas"].append(f)
+            if btn_guardar:
+                if nombre_evento and clave_evento and archivos_subidos:
+                    ruta_evento = os.path.join(ruta_fotografo, nombre_evento)
+                    os.makedirs(ruta_evento, exist_ok=True)
 
-        if st.session_state["fotos_acumuladas"]:
-            st.write(f"📁 **{len(st.session_state['fotos_acumuladas'])}** foto(s) lista(s) para subir.")
-            if st.button("❌ Limpiar selección de fotos"):
-                st.session_state["fotos_acumuladas"] = []
-                st.rerun()
+                    for archivo in archivos_subidos:
+                        ruta_guardado = os.path.join(ruta_evento, archivo.name)
+                        with open(ruta_guardado, "wb") as f:
+                            f.write(archivo.getbuffer())
 
-        if st.button("Guardar y Crear Galería", type="primary"):
-            fotos_a_guardar = st.session_state.get("fotos_acumuladas", [])
-            if nombre_evento and clave_evento and fotos_a_guardar:
-                ruta_evento = os.path.join(ruta_fotografo, nombre_evento)
-                os.makedirs(ruta_evento, exist_ok=True)
-
-                for archivo in fotos_a_guardar:
-                    ruta_guardado = os.path.join(ruta_evento, archivo.name)
-                    with open(ruta_guardado, "wb") as f:
-                        f.write(archivo.getbuffer())
-
-                guardar_info_evento(usuario_actual, nombre_evento, {"password": clave_evento, "favoritas": []})
-                st.session_state["fotos_acumuladas"] = []
-                st.success(f"¡Éxito! El álbum '{nombre_evento}' fue creado con {len(fotos_a_guardar)} foto(s).")
-                st.rerun()
-            else:
-                st.error("Por favor ingresa el nombre, la contraseña y selecciona al menos una foto.")
+                    guardar_info_evento(usuario_actual, nombre_evento, {"password": clave_evento, "favoritas": []})
+                    st.success(f"¡Éxito! El álbum '{nombre_evento}' fue creado con {len(archivos_subidos)} foto(s).")
+                else:
+                    st.error("Por favor ingresa el nombre, la contraseña y selecciona al menos una foto.")
 
         st.markdown("---")
 
         eventos_existentes = [f for f in os.listdir(ruta_fotografo) if os.path.isdir(os.path.join(ruta_fotografo, f))]
 
-        # --- SECCIÓN B: REVISAR FOTOS FAVORITAS ---
+        # --- SECCIÓN FOTOS FAVORITAS ---
         st.subheader("❤️ Fotos Favoritas Elegidas por el Cliente")
         if eventos_existentes:
             evento_fav_sel = st.selectbox("Selecciona un álbum para ver sus favoritas:", eventos_existentes, key="select_fav_album")
@@ -199,7 +186,7 @@ with tab_fotografo:
 
         st.markdown("---")
 
-        # --- SECCIÓN C: TRABAJOS Y GESTIÓN EN 4 COLUMNAS ---
+        # --- SECCIÓN TRABAJOS Y GESTIÓN EN 4 COLUMNAS ---
         st.subheader("📁 Todos mis Trabajos")
         if eventos_existentes:
             album_ver = st.selectbox("Selecciona un álbum para explorar sus fotos:", eventos_existentes, key="ver_historial")
@@ -314,7 +301,7 @@ with tab_cliente:
                 img_portada = ImageOps.exif_transpose(img_portada)
                 st.image(img_portada, use_container_width=True)
 
-            # --- TARJETA DE PORTADA ---
+            # --- PORTADA Y CLAVE ---
             if not st.session_state[key_acceso]:
                 st.markdown(
                     f"""
@@ -335,7 +322,7 @@ with tab_cliente:
                     else:
                         st.error("Contraseña incorrecta. Intenta de nuevo.")
 
-            # --- VISTA DESBLOQUEADA DE FOTOS ---
+            # --- GALERÍA DESBLOQUEADA ---
             else:
                 st.markdown(
                     f"""
@@ -357,47 +344,4 @@ with tab_cliente:
                 st.download_button(
                     label="📦 Descargar Galería Completa (.ZIP)",
                     data=buffer,
-                    file_name=f"{evento_seleccionado}_alta_resolucion.zip",
-                    mime="application/zip",
-                    use_container_width=True
-                )
-
-                st.markdown("---")
-
-                columnas = st.columns(2)
-
-                for index, foto in enumerate(fotos):
-                    ruta_foto = os.path.join(ruta_galeria, foto)
-                    col = columnas[index % 2]
-
-                    with col:
-                        imagen = Image.open(ruta_foto)
-                        imagen = ImageOps.exif_transpose(imagen)
-                        st.image(imagen, use_container_width=True)
-
-                        favs_actuales = info_evento.get("favoritas", [])
-                        if not isinstance(favs_actuales, list):
-                            favs_actuales = []
-                        es_fav_previo = foto in favs_actuales
-
-                        es_fav = st.checkbox("❤️ Me gusta", value=es_fav_previo, key=f"fav_{index}_{foto}")
-
-                        if es_fav != es_fav_previo:
-                            if es_fav and foto not in favs_actuales:
-                                favs_actuales.append(foto)
-                            elif not es_fav and foto in favs_actuales:
-                                favs_actuales.remove(foto)
-
-                            info_evento["favoritas"] = favs_actuales
-                            ruta_json = os.path.join(ruta_galeria, "info.json")
-                            with open(ruta_json, "w", encoding="utf-8") as f:
-                                json.dump(info_evento, f, ensure_ascii=False, indent=4)
-
-                        with open(ruta_foto, "rb") as file_data:
-                            st.download_button(
-                                label="📥 Descargar",
-                                data=file_data,
-                                file_name=foto,
-                                mime="image/jpeg",
-                                key=f"dl_{index}_{foto}"
-                            )
+                    file_name=f"{evento_seleccion

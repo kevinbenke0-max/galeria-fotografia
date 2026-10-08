@@ -269,4 +269,58 @@ with tab_fotografo:
         if eventos_existentes:
             evento_fav_sel = st.selectbox("Selecciona un álbum para ver sus favoritas:", eventos_existentes, key="select_fav_album")
             if evento_fav_sel:
-                ruta_ev = os.path.join(ruta_fotografo,
+                ruta_ev = os.path.join(ruta_fotografo, evento_fav_sel)
+                info = obtener_info_evento_por_ruta(ruta_ev)
+                favs = info.get("favoritas", [])
+
+                if favs:
+                    st.write(f"📌 El cliente seleccionó **{len(favs)}** foto(s) favorita(s):")
+                    cols_fav = st.columns(4)
+                    for idx, f in enumerate(favs):
+                        ruta_fav = os.path.join(ruta_ev, f)
+                        col = cols_fav[idx % 4]
+                        if os.path.exists(ruta_fav):
+                            img_fav = Image.open(ruta_fav)
+                            img_fav = ImageOps.exif_transpose(img_fav)
+                            col.image(img_fav, caption=f, use_container_width=True)
+                        else:
+                            col.write(f"📷 {f}")
+                else:
+                    st.info("El cliente aún no ha seleccionado fotos favoritas en este álbum.")
+        else:
+            st.info("Aún no hay álbumes creados.")
+
+        st.markdown("---")
+
+        # --- SECCIÓN C: GESTIÓN DE TRABAJOS EN 4 COLUMNAS Y BORRADO ---
+        st.subheader("📁 Historial de Trabajos")
+        if eventos_existentes:
+            album_ver = st.selectbox("Selecciona un álbum para explorar sus fotos:", eventos_existentes, key="ver_historial")
+            
+            if album_ver:
+                ruta_album = os.path.join(ruta_fotografo, album_ver)
+                fotos_album = [f for f in os.listdir(ruta_album) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
+
+                st.write(f"📷 Total de fotos en **{album_ver}**: {len(fotos_album)}")
+
+                with st.expander("🗑️ Eliminar Trabajo"):
+                    st.warning(f"¿Deseas eliminar permanentemente la carpeta '{album_ver}' y todas sus fotos?")
+                    if st.button("ELIMINAR ÁLBUM COMPLETO", key=f"del_{album_ver}"):
+                        shutil.rmtree(ruta_album)
+                        st.success(f"La carpeta '{album_ver}' ha sido eliminada.")
+                        st.rerun()
+
+                cols_historial = st.columns(4)
+                for idx, foto in enumerate(fotos_album):
+                    col = cols_historial[idx % 4]
+                    ruta_img = os.path.join(ruta_album, foto)
+                    
+                    with col:
+                        img_hist = Image.open(ruta_img)
+                        img_hist = ImageOps.exif_transpose(img_hist)
+                        st.image(img_hist, caption=foto, use_container_width=True)
+                        
+                        with st.popover("🔍 Agrandar"):
+                            st.image(img_hist, caption=foto, use_container_width=True)
+        else:
+            st.info("No hay trabajos guardados actualmente.")

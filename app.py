@@ -6,28 +6,28 @@ import zipfile
 import shutil
 from PIL import Image, ImageOps
 
-# Configuración inicial: fondo blanco y menú lateral cerrado
+# Configuración inicial
 st.set_page_config(
     page_title="CAMY.INSTANTES.PH",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Estilo CSS estético en fondo blanco (Pixieset Style) con cajas de texto bien visibilidad
+# Estilo CSS que destruye cualquier elemento oscuro nativo de Streamlit
 st.markdown(
     """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Montserrat:wght@300;400;500;600&display=swap');
     
-    /* Fondo blanco absoluto para toda la pantalla y contenedores */
-    html, body, .stApp, [data-testid="stHeader"], [data-testid="stToolbar"] {
+    /* Fondo blanco universal absoluto */
+    html, body, .stApp, header, footer, [data-testid="stHeader"], [data-testid="stToolbar"] {
         background-color: #FFFFFF !important;
         color: #1A1A1A !important;
         font-family: 'Montserrat', sans-serif !important;
     }
     
     /* Textos globales */
-    .stApp p, .stApp label, .stApp span, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp div {
+    * {
         color: #1A1A1A !important;
         font-family: 'Montserrat', sans-serif !important;
     }
@@ -57,8 +57,8 @@ st.markdown(
 
     /* Tarjetas Blancas */
     .card-blanca {
-        background-color: #FAFAFA;
-        border: 1px solid #E0E0E0;
+        background-color: #FAFAFA !important;
+        border: 1px solid #E0E0E0 !important;
         padding: 30px 20px;
         border-radius: 6px;
         text-align: center;
@@ -66,40 +66,45 @@ st.markdown(
         margin-bottom: 20px;
     }
     
-    /* Cajas de Texto (Inputs) en blanco */
-    .stTextInput input, div[data-baseweb="input"] {
+    /* Cajas de texto (Inputs) totalmente en blanco */
+    div[data-baseweb="input"], input {
         background-color: #FFFFFF !important;
         color: #1A1A1A !important;
         border: 1px solid #CCCCCC !important;
         border-radius: 4px !important;
     }
 
-    /* Área de Carga de Archivos (File Uploader) en Blanco */
-    [data-testid="stFileUploader"], 
-    [data-testid="stFileUploaderDropzone"], 
+    /* Forzar fondo blanco en el ojito de la contraseña */
+    div[data-baseweb="input"] > div, button[aria-label="Show password"], button[aria-label="Hide password"] {
+        background-color: #FFFFFF !important;
+        color: #1A1A1A !important;
+    }
+
+    /* Selector de Archivos (File Uploader) totalmente en blanco */
     section[data-testid="stFileUploaderDropzone"] {
         background-color: #FAFAFA !important;
         border: 1px dashed #CCCCCC !important;
+    }
+    section[data-testid="stFileUploaderDropzone"] * {
+        background-color: transparent !important;
         color: #1A1A1A !important;
-        border-radius: 6px !important;
     }
     
-    /* Elementos dentro del archivo subido en fondo blanco */
-    [data-testid="stFileUploaderFileData"], 
-    [data-testid="stFileUploaderDeleteBtn"] {
-        background-color: #FFFFFF !important;
-        border: 1px solid #E0E0E0 !important;
+    /* Botón interno de la subida de archivos (Upload) */
+    button[data-testid="stBaseButton-secondary"] {
+        background-color: #EAEAEA !important;
         color: #1A1A1A !important;
+        border: 1px solid #CCCCCC !important;
     }
 
-    /* Íconos (Ojito de contraseña, etc) en fondo blanco */
-    [data-testid="stTextInputAction"], button[aria-label="Show password"] {
+    /* Botón de la papelera del archivo cargado */
+    [data-testid="stFileUploaderFileData"] {
         background-color: #FFFFFF !important;
-        color: #1A1A1A !important;
+        border: 1px solid #E0E0E0 !important;
     }
 
     /* Botones principales en Negro elegante con texto Blanco */
-    .stButton>button {
+    button[data-testid="stBaseButton-primary"], .stButton > button {
         background-color: #1A1A1A !important;
         color: #FFFFFF !important;
         border-radius: 4px !important;
@@ -111,15 +116,16 @@ st.markdown(
         text-transform: uppercase !important;
         margin-top: 10px !important;
     }
-    .stButton>button:hover {
-        background-color: #333333 !important;
+    button[data-testid="stBaseButton-primary"] *, .stButton > button * {
         color: #FFFFFF !important;
     }
+    .stButton>button:hover {
+        background-color: #333333 !important;
+    }
 
-    /* Pestañas superores estilo Pixieset */
-    button[data-baseweb="tab"] {
-        background-color: transparent !important;
-        color: #1A1A1A !important;
+    /* Ocultar elementos sobrantes */
+    [data-testid="stSidebar"] {
+        display: none !important;
     }
     </style>
     """,
@@ -169,11 +175,11 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Navegación mediante Pestañas Elegantes
+# Navegación mediante Pestañas
 tab_cliente, tab_fotografo = st.tabs(["🖼 Portal Cliente", "🔒 Panel Administración"])
 
 # =========================================================
-# 1. PORTAL DEL CLIENTE (ELEGANTES PORTADAS BLANCAS)
+# 1. PORTAL DEL CLIENTE
 # =========================================================
 with tab_cliente:
     mapa_eventos = {}
@@ -212,7 +218,7 @@ with tab_cliente:
                 img_portada = ImageOps.exif_transpose(img_portada)
                 st.image(img_portada, use_container_width=True)
 
-            # --- TARJETA DE ACCESO CON CLAVE DE ÁLBUM ---
+            # --- PORTADA Y CLAVE DE ÁLBUM ---
             if not st.session_state[key_acceso]:
                 st.markdown(
                     f"""
@@ -245,7 +251,6 @@ with tab_cliente:
                     unsafe_allow_html=True
                 )
 
-                # Descarga ZIP completa
                 buffer = io.BytesIO()
                 with zipfile.ZipFile(buffer, "w") as zip_file:
                     for foto in fotos:
@@ -301,7 +306,7 @@ with tab_cliente:
                             )
 
 # =========================================================
-# 2. PANEL DE LA FOTÓGRAFA (PROTEGIDO POR CONTRASEÑA)
+# 2. PANEL DE LA FOTÓGRAFA (PROTEGIDO)
 # =========================================================
 with tab_fotografo:
     # --- PANTALLA DE ACCESO ADMINISTRATIVO ---
@@ -325,7 +330,7 @@ with tab_fotografo:
             else:
                 st.error("Contraseña incorrecta.")
 
-    # --- PANEL ADMINISTRATIVO DENTRO DE SESIÓN ---
+    # --- PANEL DENTRO DE SESIÓN ---
     else:
         col_admin1, col_admin2 = st.columns([3, 1])
         with col_admin1:
@@ -401,7 +406,7 @@ with tab_fotografo:
 
         st.markdown("---")
 
-        # --- SECCIÓN C: GESTIÓN DE TRABAJOS EN 4 COLUMNAS Y BORRADO ---
+        # --- SECCIÓN C: HISTORIAL DE TRABAJOS ---
         st.subheader("📁 Historial de Trabajos")
         if eventos_existentes:
             album_ver = st.selectbox("Selecciona un álbum para explorar sus fotos:", eventos_existentes, key="ver_historial")

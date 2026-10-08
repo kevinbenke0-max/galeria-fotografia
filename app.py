@@ -410,4 +410,7 @@ with tab_fotografo:
                         img_hist = ImageOps.exif_transpose(img_hist)
                         st.image(img_hist, caption=foto, use_container_width=True)
                         
-                        with st.popover("
+                        with st.popover("🔍 Agrandar"):
+                            st.image(img_hist, caption=foto, use_container_width=True)
+        else:
+            st.info("No hay trabajos guardados actualmente.")

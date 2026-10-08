@@ -341,7 +341,50 @@ with tab_cliente:
                         zip_file.write(ruta_foto, arcname=foto)
                 buffer.seek(0)
 
-                st.download_button(
+                                st.download_button(
                     label="📦 Descargar Galería Completa (.ZIP)",
                     data=buffer,
-                    file_name=f"{evento_seleccion
+                    file_name=f"{evento_seleccionado}_alta_resolucion.zip",
+                    mime="application/zip",
+                    use_container_width=True
+                )
+
+                st.markdown("---")
+
+                columnas = st.columns(2)
+
+                for index, foto in enumerate(fotos):
+                    ruta_foto = os.path.join(ruta_galeria, foto)
+                    col = columnas[index % 2]
+
+                    with col:
+                        imagen = Image.open(ruta_foto)
+                        imagen = ImageOps.exif_transpose(imagen)
+                        st.image(imagen, use_container_width=True)
+
+                        favs_actuales = info_evento.get("favoritas", [])
+                        if not isinstance(favs_actuales, list):
+                            favs_actuales = []
+                        es_fav_previo = foto in favs_actuales
+
+                        es_fav = st.checkbox("❤️ Me gusta", value=es_fav_previo, key=f"fav_{index}_{foto}")
+
+                        if es_fav != es_fav_previo:
+                            if es_fav and foto not in favs_actuales:
+                                favs_actuales.append(foto)
+                            elif not es_fav and foto in favs_actuales:
+                                favs_actuales.remove(foto)
+
+                            info_evento["favoritas"] = favs_actuales
+                            ruta_json = os.path.join(ruta_galeria, "info.json")
+                            with open(ruta_json, "w", encoding="utf-8") as f:
+                                json.dump(info_evento, f, ensure_ascii=False, indent=4)
+
+                        with open(ruta_foto, "rb") as file_data:
+                            st.download_button(
+                                label="📥 Descargar",
+                                data=file_data,
+                                file_name=foto,
+                                mime="image/jpeg",
+                                key=f"dl_{index}_{foto}"
+                            )

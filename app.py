@@ -129,32 +129,46 @@ with tab_fotografo:
         clave_evento = st.text_input("Contraseña de acceso para el cliente:", type="password").strip()
 
         st.info("💡 **Consejo en celulares:** Mantén presionada la primera foto en la galería de tu teléfono para activar la selección múltiple y elegir todas las fotos juntas.")
+# Carga múltiple optimizada para celulares
+archivos_subidos = st.file_uploader(
+    "Selecciona las fotos del álbum:",
+    type=["jpg", "jpeg", "png", "webp"],
+    accept_multiple_files=True,
+    key="uploader_album"
+)
 
-        # Permite seleccionar y subir múltiples archivos simultáneamente
-        archivos_subidos = st.file_uploader(
-            "Selecciona todas las fotos del álbum a la vez:",
-            type=["jpg", "jpeg", "png", "webp"],
-            accept_multiple_files=True
-        )
+# Permitir agregar más fotos en lotes si el celular no envió todas juntas
+if "fotos_acumuladas" not in st.session_state:
+    st.session_state["fotos_acumuladas"] = []
 
-        if archivos_subidos:
-            st.write(f"📁 **{len(archivos_subidos)}** foto(s) seleccionada(s) listas para subir.")
+if archivos_subidos:
+    for f in archivos_subidos:
+        if f not in st.session_state["fotos_acumuladas"]:
+            st.session_state["fotos_acumuladas"].append(f)
 
-        if st.button("Guardar y Crear Galería", type="primary"):
-            if nombre_evento and clave_evento and archivos_subidos:
-                ruta_evento = os.path.join(ruta_fotografo, nombre_evento)
-                os.makedirs(ruta_evento, exist_ok=True)
+# Guardar y procesar la lista completa de imágenes acumuladas
+if st.session_state["fotos_acumuladas"]:
+    st.write(f"📁 **{len(st.session_state['fotos_acumuladas'])}** foto(s) seleccionada(s) en total.")
+    if st.button("❌ Limpiar selección"):
+        st.session_state["fotos_acumuladas"] = []
+        st.rerun()
+if st.button("Guardar y Crear Galería", type="primary"):
+    fotos_a_guardar = st.session_state.get("fotos_acumuladas", [])
+    if nombre_evento and clave_evento and fotos_a_guardar:
+        ruta_evento = os.path.join(ruta_fotografo, nombre_evento)
+        os.makedirs(ruta_evento, exist_ok=True)
 
-                for archivo in archivos_subidos:
-                    ruta_guardado = os.path.join(ruta_evento, archivo.name)
-                    with open(ruta_guardado, "wb") as f:
-                        f.write(archivo.getbuffer())
+        for archivo in fotos_a_guardar:
+            ruta_guardado = os.path.join(ruta_evento, archivo.name)
+            with open(ruta_guardado, "wb") as f:
+                f.write(archivo.getbuffer())
 
-                guardar_info_evento(usuario_actual, nombre_evento, {"password": clave_evento, "favoritas": []})
-                st.success(f"¡Éxito! El álbum '{nombre_evento}' fue creado con {len(archivos_subidos)} foto(s).")
-                st.rerun()
-            else:
-                st.error("Por favor ingresa el nombre, la contraseña y selecciona al menos una foto.")
+        guardar_info_evento(usuario_actual, nombre_evento, {"password": clave_evento, "favoritas": []})
+        st.session_state["fotos_acumuladas"] = []  # Limpiar la lista tras guardar
+        st.success(f"¡Éxito! El álbum '{nombre_evento}' fue creado con {len(fotos_a_guardar)} foto(s).")
+        st.rerun()
+    else:
+        st.error("Por favor ingresa el nombre, la contraseña y selecciona al menos una foto.")
 
         st.markdown("---")
 

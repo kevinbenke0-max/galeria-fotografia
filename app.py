@@ -19,20 +19,20 @@ st.markdown(
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Montserrat:wght@300;400;500;600&display=swap');
     
-    /* Fondo Blanco General */
-    .stApp {
+    /* Fondo blanco absoluto para toda la pantalla y contenedores */
+    html, body, .stApp, [data-testid="stHeader"], [data-testid="stToolbar"] {
         background-color: #FFFFFF !important;
         color: #1A1A1A !important;
-        font-family: 'Montserrat', sans-serif;
+        font-family: 'Montserrat', sans-serif !important;
     }
     
-    /* Forzar visibilidad de textos */
-    .stApp p, .stApp label, .stApp span, .stApp h1, .stApp h2, .stApp h3, .stApp h4 {
+    /* Textos globales */
+    .stApp p, .stApp label, .stApp span, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp div {
         color: #1A1A1A !important;
         font-family: 'Montserrat', sans-serif !important;
     }
 
-    /* Encabezado Principal */
+    /* Encabezado principal */
     .header-marca {
         text-align: center;
         padding: 25px 0 10px 0;
@@ -55,7 +55,7 @@ st.markdown(
         margin-top: 5px;
     }
 
-    /* Tarjetas Blancas Estilizadas */
+    /* Tarjetas Blancas */
     .card-blanca {
         background-color: #FAFAFA;
         border: 1px solid #E0E0E0;
@@ -66,21 +66,39 @@ st.markdown(
         margin-bottom: 20px;
     }
     
-    /* Cajas de texto (Inputs) claramente visibles */
-    .stTextInput input {
+    /* Cajas de Texto (Inputs) en blanco */
+    .stTextInput input, div[data-baseweb="input"] {
         background-color: #FFFFFF !important;
         color: #1A1A1A !important;
         border: 1px solid #CCCCCC !important;
         border-radius: 4px !important;
-        padding: 10px !important;
-        font-size: 14px !important;
-    }
-    .stTextInput input:focus {
-        border-color: #1A1A1A !important;
-        box-shadow: 0 0 5px rgba(0,0,0,0.1) !important;
     }
 
-    /* Botones Elegantes en Negro */
+    /* Área de Carga de Archivos (File Uploader) en Blanco */
+    [data-testid="stFileUploader"], 
+    [data-testid="stFileUploaderDropzone"], 
+    section[data-testid="stFileUploaderDropzone"] {
+        background-color: #FAFAFA !important;
+        border: 1px dashed #CCCCCC !important;
+        color: #1A1A1A !important;
+        border-radius: 6px !important;
+    }
+    
+    /* Elementos dentro del archivo subido en fondo blanco */
+    [data-testid="stFileUploaderFileData"], 
+    [data-testid="stFileUploaderDeleteBtn"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E0E0E0 !important;
+        color: #1A1A1A !important;
+    }
+
+    /* Íconos (Ojito de contraseña, etc) en fondo blanco */
+    [data-testid="stTextInputAction"], button[aria-label="Show password"] {
+        background-color: #FFFFFF !important;
+        color: #1A1A1A !important;
+    }
+
+    /* Botones principales en Negro elegante con texto Blanco */
     .stButton>button {
         background-color: #1A1A1A !important;
         color: #FFFFFF !important;
@@ -98,9 +116,10 @@ st.markdown(
         color: #FFFFFF !important;
     }
 
-    /* Ocultar barra lateral si se abre */
-    [data-testid="stSidebar"] {
-        background-color: #FFFFFF !important;
+    /* Pestañas superores estilo Pixieset */
+    button[data-baseweb="tab"] {
+        background-color: transparent !important;
+        color: #1A1A1A !important;
     }
     </style>
     """,

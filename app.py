@@ -87,7 +87,7 @@ def obtener_info_evento_por_ruta(ruta_evento):
 
 st.title("📸 Sistema de Gestión y Entrega Fotográfica")
 
-# Inicialización de sesión en Streamlit
+# Inicialización de sesión
 if "usuario_autenticado" not in st.session_state:
     st.session_state["usuario_autenticado"] = False
 if "usuario_actual" not in st.session_state:
@@ -95,48 +95,43 @@ if "usuario_actual" not in st.session_state:
 
 modo = st.sidebar.radio("Navegación", ["Panel Fotógrafo (Cargar Fotos)", "Portal Cliente (Ver y Descargar)"])
 
-# =========================================================
 # 1. PANEL DE FOTÓGRAFOS
-# =========================================================
 if modo == "Panel Fotógrafo (Cargar Fotos)":
-    st.sidebar.markdown("---")
-
     usuarios_db = cargar_usuarios()
 
-    # Si NO ha iniciado sesión, mostramos el login / registro en el lateral
+    # Si NO ha iniciado sesión, el login se muestra EN EL CENTRO de la pantalla
     if not st.session_state["usuario_autenticado"]:
-        opcion_cuenta = st.sidebar.radio("Acceso Fotógrafos:", ["Iniciar Sesión", "Crear Nuevo Perfil"])
+        st.subheader("🔑 Acceso para Fotógrafos")
+        opcion_cuenta = st.radio("Elige una opción:", ["Iniciar Sesión", "Crear Nuevo Perfil"], horizontal=True)
 
         if opcion_cuenta == "Iniciar Sesión":
-            st.sidebar.subheader("🔑 Iniciar Sesión")
-            u_input = st.sidebar.text_input("Usuario:", key="login_user").strip()
-            p_input = st.sidebar.text_input("Contraseña:", type="password", key="login_pass").strip()
+            u_input = st.text_input("Usuario:", key="login_user").strip()
+            p_input = st.text_input("Contraseña:", type="password", key="login_pass").strip()
 
-            if st.sidebar.button("Ingresar"):
+            if st.button("Ingresar al Panel", type="primary"):
                 if u_input and p_input:
                     if u_input.lower() in usuarios_db and usuarios_db[u_input.lower()] == p_input:
                         st.session_state["usuario_autenticado"] = True
                         st.session_state["usuario_actual"] = u_input
-                        st.rerun()  # Redirige inmediatamente al panel
+                        st.rerun()  # Carga de inmediato el panel principal
                     else:
-                        st.sidebar.error("Usuario o contraseña incorrectos")
+                        st.error("Usuario o contraseña incorrectos")
                 else:
-                    st.sidebar.warning("Por favor completa ambos campos.")
+                    st.warning("Por favor completa ambos campos.")
 
         elif opcion_cuenta == "Crear Nuevo Perfil":
-            st.sidebar.subheader("👤 Registrar Fotógrafo/a")
-            nuevo_u = st.sidebar.text_input("Nuevo Usuario:", key="reg_user").strip()
-            nuevo_p = st.sidebar.text_input("Nueva Contraseña:", type="password", key="reg_pass").strip()
+            nuevo_u = st.text_input("Nuevo Usuario:", key="reg_user").strip()
+            nuevo_p = st.text_input("Nueva Contraseña:", type="password", key="reg_pass").strip()
 
-            if st.sidebar.button("Registrar Perfil"):
+            if st.button("Registrar Perfil"):
                 if nuevo_u and nuevo_p:
                     if nuevo_u.lower() in usuarios_db:
-                        st.sidebar.warning("El usuario ya existe. Intenta con otro nombre.")
+                        st.warning("El usuario ya existe. Intenta con otro nombre.")
                     else:
                         registrar_usuario(nuevo_u, nuevo_p)
-                        st.sidebar.success("¡Perfil creado con éxito! Ahora ve a 'Iniciar Sesión'.")
+                        st.success("¡Perfil creado con éxito! Ahora ve a 'Iniciar Sesión'.")
                 else:
-                    st.sidebar.error("Completa todos los campos.")
+                    st.error("Completa todos los campos.")
 
     # Si YA inició sesión, mostramos las herramientas del fotógrafo
     if st.session_state["usuario_autenticado"]:

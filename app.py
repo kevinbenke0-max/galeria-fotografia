@@ -8,7 +8,7 @@ import shutil
 from PIL import Image, ImageOps
 
 # Configuración de la página
-st.set_page_config(page_title="Galería Fotográfica", layout="wide")
+st.set_page_config(page_title="Galería Fotográfica", layout="wide", initial_sidebar_state="collapsed")
 
 # Función para aplicar la imagen de fondo con estilos CSS
 def set_bg_hack(main_bg):

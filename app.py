@@ -341,7 +341,8 @@ with tab_cliente:
                         zip_file.write(ruta_foto, arcname=foto)
                 buffer.seek(0)
 
-                                st.download_button(
+                        
+                st.download_button(
                     label="📦 Descargar Galería Completa (.ZIP)",
                     data=buffer,
                     file_name=f"{evento_seleccionado}_alta_resolucion.zip",

@@ -6,7 +6,7 @@ import zipfile
 import shutil
 from PIL import Image, ImageOps
 
-# Configuración inicial (se inicia con la barra lateral colapsada para no molestar en móviles)
+# Configuración inicial (inicia con el menú lateral cerrado para evitar molestias en celulares)
 st.set_page_config(
     page_title="Panel de Fotografía",
     layout="wide",
@@ -63,7 +63,7 @@ if "usuario_actual" not in st.session_state:
 
 st.title("📸 Sistema de Gestión y Entrega Fotográfica")
 
-# Navegación principal en el centro mediante pestañas
+# Navegación principal
 tab_fotografo, tab_cliente = st.tabs(["📸 Panel Fotógrafa", "🖼 Portal Cliente"])
 
 # =========================================================
@@ -123,16 +123,22 @@ with tab_fotografo:
 
         st.markdown("---")
 
-        # --- SECCIÓN A: CREAR NUEVO ÁLBUM ---
+        # --- SECCIÓN A: CREAR NUEVO ÁLBUM (CARGA MÚLTIPLE HABILITADA) ---
         st.subheader("➕ Cargar Nuevo Álbum de Cliente")
-        nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda Camila y Mateo):").strip()
+        nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda Ayelen):").strip()
         clave_evento = st.text_input("Contraseña de acceso para el cliente:", type="password").strip()
 
+        st.info("💡 **Consejo en celulares:** Mantén presionada la primera foto en la galería de tu teléfono para activar la selección múltiple y elegir todas las fotos juntas.")
+
+        # Permite seleccionar y subir múltiples archivos simultáneamente
         archivos_subidos = st.file_uploader(
-            "Selecciona las fotos para subir:",
+            "Selecciona todas las fotos del álbum a la vez:",
             type=["jpg", "jpeg", "png", "webp"],
             accept_multiple_files=True
         )
+
+        if archivos_subidos:
+            st.write(f"📁 **{len(archivos_subidos)}** foto(s) seleccionada(s) listas para subir.")
 
         if st.button("Guardar y Crear Galería", type="primary"):
             if nombre_evento and clave_evento and archivos_subidos:
@@ -145,10 +151,10 @@ with tab_fotografo:
                         f.write(archivo.getbuffer())
 
                 guardar_info_evento(usuario_actual, nombre_evento, {"password": clave_evento, "favoritas": []})
-                st.success(f"¡Éxito! El álbum '{nombre_evento}' fue creado correctamente.")
+                st.success(f"¡Éxito! El álbum '{nombre_evento}' fue creado con {len(archivos_subidos)} foto(s).")
                 st.rerun()
             else:
-                st.error("Por favor ingresa el nombre, la contraseña y sube al menos una foto.")
+                st.error("Por favor ingresa el nombre, la contraseña y selecciona al menos una foto.")
 
         st.markdown("---")
 
@@ -182,7 +188,7 @@ with tab_fotografo:
 
         st.markdown("---")
 
-        # --- SECCIÓN C: TRABAJOS Y GESTIÓN EN 4 COLUMNAS ---
+        # --- SECCIÓN C: TRABAJOS Y GESTIÓN EN 4 COLUMNAS CON OPON DE BORRAR ---
         st.subheader("📁 Todos mis Trabajos")
         if eventos_existentes:
             album_ver = st.selectbox("Selecciona un álbum para explorar sus fotos:", eventos_existentes, key="ver_historial")
@@ -193,7 +199,7 @@ with tab_fotografo:
 
                 st.write(f"📷 Total de fotos en **{album_ver}**: {len(fotos_album)}")
 
-                # Opción para eliminar el trabajo
+                # Opción para eliminar trabajo
                 with st.expander("🗑️ Opciones / Borrar Trabajo"):
                     st.warning(f"¿Deseas eliminar permanentemente la carpeta '{album_ver}' y todas sus fotos?")
                     if st.button("Eliminar Álbum Completo", key=f"del_{album_ver}"):
@@ -201,7 +207,7 @@ with tab_fotografo:
                         st.success(f"La carpeta '{album_ver}' ha sido eliminada.")
                         st.rerun()
 
-                # Despliegue en 4 columnas
+                # Despliegue en 4 columnas con opción para agrandar
                 cols_historial = st.columns(4)
                 for idx, foto in enumerate(fotos_album):
                     col = cols_historial[idx % 4]
@@ -212,16 +218,15 @@ with tab_fotografo:
                         img_hist = ImageOps.exif_transpose(img_hist)
                         st.image(img_hist, caption=foto, use_container_width=True)
                         
-                        # Opción para agrandar la foto
                         with st.popover("🔍 Agrandar"):
                             st.image(img_hist, caption=foto, use_container_width=True)
         else:
             st.info("No hay trabajos guardados actualmente.")
-          # =========================================================
-# 2. PORTAL DEL CLIENTE (ESTILO PORTADA EGANTE)
+
+# =========================================================
+# 2. PORTAL DEL CLIENTE (DISEÑO PIXIESET)
 # =========================================================
 with tab_cliente:
-    # Estilos CSS personalizados para imitar el diseño de la imagen
     st.markdown(
         """
         <style>
@@ -253,15 +258,6 @@ with tab_cliente:
             margin: 10px 0;
             line-height: 1.1;
         }
-        .fecha-evento {
-            font-family: 'Helvetica Neue', sans-serif;
-            font-size: 11px;
-            letter-spacing: 2px;
-            color: #888888;
-            text-transform: uppercase;
-            margin-top: 10px;
-            margin-bottom: 25px;
-        }
         </style>
         """,
         unsafe_allow_html=True
@@ -287,13 +283,11 @@ with tab_cliente:
             ruta_galeria = datos_galeria["ruta"]
             nombre_fotografo = datos_galeria["fotografo"]
 
-            # Formatear el nombre comercial de la fotógrafa
             marca_fotografa = "CAMY.INSTANTES.PH" if nombre_fotografo.lower() in ["camila", "camy"] else f"{nombre_fotografo.upper()}.PH"
 
             info_evento = obtener_info_evento_por_ruta(ruta_galeria)
             clave_correcta = info_evento.get("password", "")
 
-            # Control de estado de acceso a la galería actual
             key_acceso = f"acceso_concedido_{evento_seleccionado}"
             if key_acceso not in st.session_state:
                 st.session_state[key_acceso] = False
@@ -305,14 +299,13 @@ with tab_cliente:
                 and not f.startswith('.')
             ]
 
-            # Muestra la foto de portada si existe alguna imagen cargada
             if fotos:
                 ruta_portada = os.path.join(ruta_galeria, fotos[0])
                 img_portada = Image.open(ruta_portada)
                 img_portada = ImageOps.exif_transpose(img_portada)
                 st.image(img_portada, use_container_width=True)
 
-            # --- TARJETA ESTILO PORTADA ---
+            # --- TARJETA DE PORTADA ---
             if not st.session_state[key_acceso]:
                 st.markdown(
                     f"""
@@ -324,7 +317,7 @@ with tab_cliente:
                     unsafe_allow_html=True
                 )
 
-                clave_ingresada = st.text_input("Ingresa tu clave para ingresar:", type="password", key=f"pass_{evento_seleccionado}")
+                clave_ingresada = st.text_input("Ingresa tu clave de acceso:", type="password", key=f"pass_{evento_seleccionado}")
 
                 if st.button("VER GALERÍA", type="primary", use_container_width=True):
                     if clave_ingresada == clave_correcta:
@@ -333,7 +326,7 @@ with tab_cliente:
                     else:
                         st.error("Contraseña incorrecta. Intenta de nuevo.")
 
-            # --- GALERÍA DESPLEGADA (UNA VEZ INGRESADA LA CLAVE) ---
+            # --- VISTA DESBLOQUEADA DE FOTOS ---
             else:
                 st.markdown(
                     f"""
@@ -345,7 +338,6 @@ with tab_cliente:
                     unsafe_allow_html=True
                 )
 
-                # Descarga ZIP completa
                 buffer = io.BytesIO()
                 with zipfile.ZipFile(buffer, "w") as zip_file:
                     for foto in fotos:
@@ -363,7 +355,6 @@ with tab_cliente:
 
                 st.markdown("---")
 
-                # Cuadrícula de fotos en 2 columnas estilo Pixieset móvil
                 columnas = st.columns(2)
 
                 for index, foto in enumerate(fotos):

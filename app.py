@@ -123,36 +123,38 @@ with tab_fotografo:
 
         st.markdown("---")
 
-        # --- CREAR ÁLBUM CON FORMULARIO PROTEGIDO PARA ANDROID ---
+        # --- CREAR ÁLBUM CON CARGA MÚLTIPLE REFORZADA ---
         st.subheader("➕ Cargar Nuevo Álbum de Cliente")
-        
-        # El formulario evita que Streamlit se recargue en mitad de la carga múltiple de Android
-        with st.form("form_crear_album", clear_on_submit=True):
-            nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda Ayelen):").strip()
-            clave_evento = st.text_input("Contraseña de acceso para el cliente:", type="password").strip()
 
-            archivos_subidos = st.file_uploader(
-                "Selecciona las fotos del álbum:",
-                type=["jpg", "jpeg", "png", "webp"],
-                accept_multiple_files=True
-            )
+        nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda Ayelen):").strip()
+        clave_evento = st.text_input("Contraseña de acceso para el cliente:", type="password").strip()
 
-            btn_guardar = st.form_submit_button("Guardar y Crear Galería", type="primary", use_container_width=True)
+        # Selector nativo múltiple reforzado
+        archivos_subidos = st.file_uploader(
+            "Selecciona todas las fotos del álbum juntas:",
+            type=["jpg", "jpeg", "png", "webp"],
+            accept_multiple_files=True,
+            key=f"uploader_multi_{nombre_evento}"
+        )
 
-            if btn_guardar:
-                if nombre_evento and clave_evento and archivos_subidos:
-                    ruta_evento = os.path.join(ruta_fotografo, nombre_evento)
-                    os.makedirs(ruta_evento, exist_ok=True)
+        if archivos_subidos:
+            st.success(f"📌 ¡Se han cargado correctamente **{len(archivos_subidos)}** foto(s)!")
 
-                    for archivo in archivos_subidos:
-                        ruta_guardado = os.path.join(ruta_evento, archivo.name)
-                        with open(ruta_guardado, "wb") as f:
-                            f.write(archivo.getbuffer())
+        if st.button("Guardar y Crear Galería", type="primary", use_container_width=True):
+            if nombre_evento and clave_evento and archivos_subidos:
+                ruta_evento = os.path.join(ruta_fotografo, nombre_evento)
+                os.makedirs(ruta_evento, exist_ok=True)
 
-                    guardar_info_evento(usuario_actual, nombre_evento, {"password": clave_evento, "favoritas": []})
-                    st.success(f"¡Éxito! El álbum '{nombre_evento}' fue creado con {len(archivos_subidos)} foto(s).")
-                else:
-                    st.error("Por favor ingresa el nombre, la contraseña y selecciona al menos una foto.")
+                for archivo in archivos_subidos:
+                    ruta_guardado = os.path.join(ruta_evento, archivo.name)
+                    with open(ruta_guardado, "wb") as f:
+                        f.write(archivo.getbuffer())
+
+                guardar_info_evento(usuario_actual, nombre_evento, {"password": clave_evento, "favoritas": []})
+                st.success(f"¡Éxito! El álbum '{nombre_evento}' fue creado con {len(archivos_subidos)} foto(s).")
+                st.rerun()
+            else:
+                st.error("Por favor ingresa el nombre, la contraseña y selecciona al menos una foto.")
 
         st.markdown("---")
 
@@ -341,7 +343,6 @@ with tab_cliente:
                         zip_file.write(ruta_foto, arcname=foto)
                 buffer.seek(0)
 
-                        
                 st.download_button(
                     label="📦 Descargar Galería Completa (.ZIP)",
                     data=buffer,

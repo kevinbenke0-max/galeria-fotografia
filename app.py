@@ -6,7 +6,7 @@ import zipfile
 import shutil
 from PIL import Image, ImageOps
 
-# Configuración inicial (inicia con el menú lateral cerrado para evitar molestias en celulares)
+# Configuración inicial (inicia con el menú lateral cerrado)
 st.set_page_config(
     page_title="Panel de Fotografía",
     layout="wide",
@@ -72,7 +72,7 @@ tab_fotografo, tab_cliente = st.tabs(["📸 Panel Fotógrafa", "🖼 Portal Clie
 with tab_fotografo:
     usuarios_db = cargar_usuarios()
 
-    # --- PANTALLA DE ACCESO/LOGIN ---
+    # --- PANTALLA DE ACCESO/LOGIN (SÓLO SE MUESTRA ESTO SI NO INICIÓ SESIÓN) ---
     if not st.session_state["usuario_autenticado"]:
         st.subheader("🔑 Acceso al Panel")
         opcion_cuenta = st.radio("Elige una opción:", ["Iniciar Sesión", "Crear Nuevo Perfil"], horizontal=True)
@@ -106,7 +106,7 @@ with tab_fotografo:
                 else:
                     st.error("Completa todos los campos.")
 
-    # --- PANEL DENTRO DE LA SESIÓN ---
+    # --- PANEL DENTRO DE LA SESIÓN (SÓLO APARECE LUEGO DE INGRESAR) ---
     else:
         usuario_actual = st.session_state["usuario_actual"]
 
@@ -123,52 +123,49 @@ with tab_fotografo:
 
         st.markdown("---")
 
-        # --- SECCIÓN A: CREAR NUEVO ÁLBUM (CARGA MÚLTIPLE HABILITADA) ---
+        # --- SECCIÓN A: CREAR NUEVO ÁLBUM (CARGA MÚLTIPLE OPTIMIZADA) ---
         st.subheader("➕ Cargar Nuevo Álbum de Cliente")
         nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda Ayelen):").strip()
         clave_evento = st.text_input("Contraseña de acceso para el cliente:", type="password").strip()
 
-        st.info("💡 **Consejo en celulares:** Mantén presionada la primera foto en la galería de tu teléfono para activar la selección múltiple y elegir todas las fotos juntas.")
-# Carga múltiple optimizada para celulares
-archivos_subidos = st.file_uploader(
-    "Selecciona las fotos del álbum:",
-    type=["jpg", "jpeg", "png", "webp"],
-    accept_multiple_files=True,
-    key="uploader_album"
-)
+        archivos_subidos = st.file_uploader(
+            "Selecciona las fotos del álbum:",
+            type=["jpg", "jpeg", "png", "webp"],
+            accept_multiple_files=True,
+            key="uploader_album"
+        )
 
-# Permitir agregar más fotos en lotes si el celular no envió todas juntas
-if "fotos_acumuladas" not in st.session_state:
-    st.session_state["fotos_acumuladas"] = []
+        if "fotos_acumuladas" not in st.session_state:
+            st.session_state["fotos_acumuladas"] = []
 
-if archivos_subidos:
-    for f in archivos_subidos:
-        if f not in st.session_state["fotos_acumuladas"]:
-            st.session_state["fotos_acumuladas"].append(f)
+        if archivos_subidos:
+            for f in archivos_subidos:
+                if f not in st.session_state["fotos_acumuladas"]:
+                    st.session_state["fotos_acumuladas"].append(f)
 
-# Guardar y procesar la lista completa de imágenes acumuladas
-if st.session_state["fotos_acumuladas"]:
-    st.write(f"📁 **{len(st.session_state['fotos_acumuladas'])}** foto(s) seleccionada(s) en total.")
-    if st.button("❌ Limpiar selección"):
-        st.session_state["fotos_acumuladas"] = []
-        st.rerun()
-if st.button("Guardar y Crear Galería", type="primary"):
-    fotos_a_guardar = st.session_state.get("fotos_acumuladas", [])
-    if nombre_evento and clave_evento and fotos_a_guardar:
-        ruta_evento = os.path.join(ruta_fotografo, nombre_evento)
-        os.makedirs(ruta_evento, exist_ok=True)
+        if st.session_state["fotos_acumuladas"]:
+            st.write(f"📁 **{len(st.session_state['fotos_acumuladas'])}** foto(s) lista(s) para subir.")
+            if st.button("❌ Limpiar selección de fotos"):
+                st.session_state["fotos_acumuladas"] = []
+                st.rerun()
 
-        for archivo in fotos_a_guardar:
-            ruta_guardado = os.path.join(ruta_evento, archivo.name)
-            with open(ruta_guardado, "wb") as f:
-                f.write(archivo.getbuffer())
+        if st.button("Guardar y Crear Galería", type="primary"):
+            fotos_a_guardar = st.session_state.get("fotos_acumuladas", [])
+            if nombre_evento and clave_evento and fotos_a_guardar:
+                ruta_evento = os.path.join(ruta_fotografo, nombre_evento)
+                os.makedirs(ruta_evento, exist_ok=True)
 
-        guardar_info_evento(usuario_actual, nombre_evento, {"password": clave_evento, "favoritas": []})
-        st.session_state["fotos_acumuladas"] = []  # Limpiar la lista tras guardar
-        st.success(f"¡Éxito! El álbum '{nombre_evento}' fue creado con {len(fotos_a_guardar)} foto(s).")
-        st.rerun()
-    else:
-        st.error("Por favor ingresa el nombre, la contraseña y selecciona al menos una foto.")
+                for archivo in fotos_a_guardar:
+                    ruta_guardado = os.path.join(ruta_evento, archivo.name)
+                    with open(ruta_guardado, "wb") as f:
+                        f.write(archivo.getbuffer())
+
+                guardar_info_evento(usuario_actual, nombre_evento, {"password": clave_evento, "favoritas": []})
+                st.session_state["fotos_acumuladas"] = []
+                st.success(f"¡Éxito! El álbum '{nombre_evento}' fue creado con {len(fotos_a_guardar)} foto(s).")
+                st.rerun()
+            else:
+                st.error("Por favor ingresa el nombre, la contraseña y selecciona al menos una foto.")
 
         st.markdown("---")
 
@@ -202,7 +199,7 @@ if st.button("Guardar y Crear Galería", type="primary"):
 
         st.markdown("---")
 
-        # --- SECCIÓN C: TRABAJOS Y GESTIÓN EN 4 COLUMNAS CON OPON DE BORRAR ---
+        # --- SECCIÓN C: TRABAJOS Y GESTIÓN EN 4 COLUMNAS ---
         st.subheader("📁 Todos mis Trabajos")
         if eventos_existentes:
             album_ver = st.selectbox("Selecciona un álbum para explorar sus fotos:", eventos_existentes, key="ver_historial")
@@ -213,7 +210,6 @@ if st.button("Guardar y Crear Galería", type="primary"):
 
                 st.write(f"📷 Total de fotos en **{album_ver}**: {len(fotos_album)}")
 
-                # Opción para eliminar trabajo
                 with st.expander("🗑️ Opciones / Borrar Trabajo"):
                     st.warning(f"¿Deseas eliminar permanentemente la carpeta '{album_ver}' y todas sus fotos?")
                     if st.button("Eliminar Álbum Completo", key=f"del_{album_ver}"):
@@ -221,7 +217,6 @@ if st.button("Guardar y Crear Galería", type="primary"):
                         st.success(f"La carpeta '{album_ver}' ha sido eliminada.")
                         st.rerun()
 
-                # Despliegue en 4 columnas con opción para agrandar
                 cols_historial = st.columns(4)
                 for idx, foto in enumerate(fotos_album):
                     col = cols_historial[idx % 4]

@@ -13,26 +13,23 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilo CSS que destruye cualquier elemento oscuro nativo de Streamlit
+# Estilo CSS para fondo blanco absoluto y limpio
 st.markdown(
     """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Montserrat:wght@300;400;500;600&display=swap');
     
-    /* Fondo blanco universal absoluto */
     html, body, .stApp, header, footer, [data-testid="stHeader"], [data-testid="stToolbar"] {
         background-color: #FFFFFF !important;
         color: #1A1A1A !important;
         font-family: 'Montserrat', sans-serif !important;
     }
     
-    /* Textos globales */
     * {
         color: #1A1A1A !important;
         font-family: 'Montserrat', sans-serif !important;
     }
 
-    /* Encabezado principal */
     .header-marca {
         text-align: center;
         padding: 25px 0 10px 0;
@@ -55,7 +52,6 @@ st.markdown(
         margin-top: 5px;
     }
 
-    /* Tarjetas Blancas */
     .card-blanca {
         background-color: #FAFAFA !important;
         border: 1px solid #E0E0E0 !important;
@@ -66,7 +62,6 @@ st.markdown(
         margin-bottom: 20px;
     }
     
-    /* Cajas de texto (Inputs) totalmente en blanco */
     div[data-baseweb="input"], input {
         background-color: #FFFFFF !important;
         color: #1A1A1A !important;
@@ -74,13 +69,11 @@ st.markdown(
         border-radius: 4px !important;
     }
 
-    /* Forzar fondo blanco en el ojito de la contraseña */
     div[data-baseweb="input"] > div, button[aria-label="Show password"], button[aria-label="Hide password"] {
         background-color: #FFFFFF !important;
         color: #1A1A1A !important;
     }
 
-    /* Selector de Archivos (File Uploader) totalmente en blanco */
     section[data-testid="stFileUploaderDropzone"] {
         background-color: #FAFAFA !important;
         border: 1px dashed #CCCCCC !important;
@@ -89,22 +82,13 @@ st.markdown(
         background-color: transparent !important;
         color: #1A1A1A !important;
     }
-    
-    /* Botón interno de la subida de archivos (Upload) */
-    button[data-testid="stBaseButton-secondary"] {
-        background-color: #EAEAEA !important;
-        color: #1A1A1A !important;
-        border: 1px solid #CCCCCC !important;
-    }
 
-    /* Botón de la papelera del archivo cargado */
     [data-testid="stFileUploaderFileData"] {
         background-color: #FFFFFF !important;
         border: 1px solid #E0E0E0 !important;
     }
 
-    /* Botones principales en Negro elegante con texto Blanco */
-    button[data-testid="stBaseButton-primary"], .stButton > button {
+    button[data-testid="stBaseButton-primary"], .stButton > button, div[data-testid="stFormSubmitButton"] > button {
         background-color: #1A1A1A !important;
         color: #FFFFFF !important;
         border-radius: 4px !important;
@@ -116,14 +100,11 @@ st.markdown(
         text-transform: uppercase !important;
         margin-top: 10px !important;
     }
-    button[data-testid="stBaseButton-primary"] *, .stButton > button * {
+
+    div[data-testid="stFormSubmitButton"] > button * {
         color: #FFFFFF !important;
     }
-    .stButton>button:hover {
-        background-color: #333333 !important;
-    }
 
-    /* Ocultar elementos sobrantes */
     [data-testid="stSidebar"] {
         display: none !important;
     }
@@ -136,7 +117,7 @@ BASE_DIR = "galerias_clientes"
 if not os.path.exists(BASE_DIR):
     os.makedirs(BASE_DIR)
 
-# Contraseña fija del panel de la fotógrafa
+# Contraseña fija del panel de Camila
 PASSWORD_FOTOGRAFA = "151124"
 
 def obtener_ruta_fotografo():
@@ -309,7 +290,6 @@ with tab_cliente:
 # 2. PANEL DE LA FOTÓGRAFA (PROTEGIDO)
 # =========================================================
 with tab_fotografo:
-    # --- PANTALLA DE ACCESO ADMINISTRATIVO ---
     if not st.session_state["fotografo_autenticado"]:
         st.markdown(
             """
@@ -330,7 +310,6 @@ with tab_fotografo:
             else:
                 st.error("Contraseña incorrecta.")
 
-    # --- PANEL DENTRO DE SESIÓN ---
     else:
         col_admin1, col_admin2 = st.columns([3, 1])
         with col_admin1:
@@ -343,98 +322,21 @@ with tab_fotografo:
         ruta_fotografo = obtener_ruta_fotografo()
         st.markdown("---")
 
-        # --- SECCIÓN A: CARGAR ÁLBUM ---
+        # --- SECCIÓN A: CARGAR ÁLBUM CON FORMULARIO PROTEGIDO ---
         st.subheader("➕ Cargar Nuevo Álbum de Cliente")
-        nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda Ayelen):").strip()
-        clave_evento = st.text_input("Contraseña de acceso para el cliente:", type="password").strip()
+        
+        with st.form("form_crear_galeria_album", clear_on_submit=True):
+            nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda Ayelen):").strip()
+            clave_evento = st.text_input("Contraseña de acceso para el cliente:", type="password").strip()
 
-        archivos_subidos = st.file_uploader(
-            "Selecciona todas las fotos del álbum:",
-            type=["jpg", "jpeg", "png", "webp"],
-            accept_multiple_files=True,
-            key=f"uploader_{nombre_evento}"
-        )
+            archivos_subidos = st.file_uploader(
+                "Selecciona las fotos del álbum:",
+                type=["jpg", "jpeg", "png", "webp"],
+                accept_multiple_files=True
+            )
 
-        if archivos_subidos:
-            st.success(f"📌 ¡Se han seleccionado **{len(archivos_subidos)}** foto(s)!")
+            btn_guardar = st.form_submit_button("GUARDAR Y CREAR GALERÍA", use_container_width=True)
 
-        if st.button("GUARDAR Y CREAR GALERÍA", use_container_width=True):
-            if nombre_evento and clave_evento and archivos_subidos:
-                ruta_evento = os.path.join(ruta_fotografo, nombre_evento)
-                os.makedirs(ruta_evento, exist_ok=True)
-
-                for archivo in archivos_subidos:
-                    ruta_guardado = os.path.join(ruta_evento, archivo.name)
-                    with open(ruta_guardado, "wb") as f:
-                        f.write(archivo.getbuffer())
-
-                guardar_info_evento(nombre_evento, {"password": clave_evento, "favoritas": []})
-                st.success(f"¡Éxito! El álbum '{nombre_evento}' fue creado con {len(archivos_subidos)} foto(s).")
-                st.rerun()
-            else:
-                st.error("Por favor completa el nombre, la contraseña y selecciona al menos una foto.")
-
-        st.markdown("---")
-
-        eventos_existentes = [f for f in os.listdir(ruta_fotografo) if os.path.isdir(os.path.join(ruta_fotografo, f))]
-
-        # --- SECCIÓN B: REVISAR FOTOS FAVORITAS ---
-        st.subheader("❤️ Fotos Favoritas Elegidas por el Cliente")
-        if eventos_existentes:
-            evento_fav_sel = st.selectbox("Selecciona un álbum para ver sus favoritas:", eventos_existentes, key="select_fav_album")
-            if evento_fav_sel:
-                ruta_ev = os.path.join(ruta_fotografo, evento_fav_sel)
-                info = obtener_info_evento_por_ruta(ruta_ev)
-                favs = info.get("favoritas", [])
-
-                if favs:
-                    st.write(f"📌 El cliente seleccionó **{len(favs)}** foto(s) favorita(s):")
-                    cols_fav = st.columns(4)
-                    for idx, f in enumerate(favs):
-                        ruta_fav = os.path.join(ruta_ev, f)
-                        col = cols_fav[idx % 4]
-                        if os.path.exists(ruta_fav):
-                            img_fav = Image.open(ruta_fav)
-                            img_fav = ImageOps.exif_transpose(img_fav)
-                            col.image(img_fav, caption=f, use_container_width=True)
-                        else:
-                            col.write(f"📷 {f}")
-                else:
-                    st.info("El cliente aún no ha seleccionado fotos favoritas en este álbum.")
-        else:
-            st.info("Aún no hay álbumes creados.")
-
-        st.markdown("---")
-
-        # --- SECCIÓN C: HISTORIAL DE TRABAJOS ---
-        st.subheader("📁 Historial de Trabajos")
-        if eventos_existentes:
-            album_ver = st.selectbox("Selecciona un álbum para explorar sus fotos:", eventos_existentes, key="ver_historial")
-            
-            if album_ver:
-                ruta_album = os.path.join(ruta_fotografo, album_ver)
-                fotos_album = [f for f in os.listdir(ruta_album) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
-
-                st.write(f"📷 Total de fotos en **{album_ver}**: {len(fotos_album)}")
-
-                with st.expander("🗑️ Eliminar Trabajo"):
-                    st.warning(f"¿Deseas eliminar permanentemente la carpeta '{album_ver}' y todas sus fotos?")
-                    if st.button("ELIMINAR ÁLBUM COMPLETO", key=f"del_{album_ver}"):
-                        shutil.rmtree(ruta_album)
-                        st.success(f"La carpeta '{album_ver}' ha sido eliminada.")
-                        st.rerun()
-
-                cols_historial = st.columns(4)
-                for idx, foto in enumerate(fotos_album):
-                    col = cols_historial[idx % 4]
-                    ruta_img = os.path.join(ruta_album, foto)
-                    
-                    with col:
-                        img_hist = Image.open(ruta_img)
-                        img_hist = ImageOps.exif_transpose(img_hist)
-                        st.image(img_hist, caption=foto, use_container_width=True)
-                        
-                        with st.popover("🔍 Agrandar"):
-                            st.image(img_hist, caption=foto, use_container_width=True)
-        else:
-            st.info("No hay trabajos guardados actualmente.")
+            if btn_guardar:
+                if nombre_evento and clave_evento and archivos_subidos:
+                    ruta_evento = os.path.join

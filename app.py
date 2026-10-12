@@ -4,7 +4,6 @@ import json
 import io
 import zipfile
 import shutil
-import base64
 from PIL import Image, ImageOps
 
 # Configuración inicial
@@ -46,16 +45,16 @@ def obtener_info_evento_por_ruta(ruta_evento):
 if "fotografo_autenticado" not in st.session_state:
     st.session_state["fotografo_autenticado"] = False
 
-# Variables de estado para almacenar archivos subidos
-if "archivos_subidos_temp" not in st.session_state:
-    st.session_state["archivos_subidos_temp"] = []
+# Inicializar lista temporal de fotos
+if "fotos_pendientes" not in st.session_state:
+    st.session_state["fotos_pendientes"] = []
 
 # --- ENCABEZADO PRINCIPAL ---
 st.markdown(
     """
-    <div style="text-align: center; padding: 20px 0 10px 0; border-bottom: 1px solid #ddd; margin-bottom: 20px;">
-        <h2 style="font-family: sans-serif; letter-spacing: 4px; margin: 0;">CAMY.INSTANTES.PH</h2>
-        <p style="font-style: italic; color: #666; margin-top: 5px;">Fotografía & Gestión de Entregas</p>
+    <div style="text-align: center; padding: 20px 0 10px 0; border-bottom: 1px solid #eaeaea; margin-bottom: 20px;">
+        <h2 style="font-family: sans-serif; letter-spacing: 4px; margin: 0; font-size: 22px;">CAMY.INSTANTES.PH</h2>
+        <p style="font-style: italic; color: #666; font-size: 14px; margin-top: 5px;">Fotografía & Gestión de Entregas</p>
     </div>
     """,
     unsafe_allow_html=True
@@ -108,9 +107,9 @@ with tab_cliente:
             if not st.session_state[key_acceso]:
                 st.markdown(
                     f"""
-                    <div style="border: 1px solid #eee; padding: 25px; text-align: center; border-radius: 8px; margin: 15px 0;">
+                    <div style="border: 1px solid #e0e0e0; padding: 30px 20px; text-align: center; border-radius: 6px; margin: 15px 0; background-color: #fafafa;">
                         <span style="font-size: 11px; letter-spacing: 2px; color: #888;">CAMY.INSTANTES.PH</span>
-                        <h1 style="font-size: 36px; margin: 10px 0;">{evento_seleccionado.capitalize()}</h1>
+                        <h1 style="font-size: 34px; margin: 10px 0; font-family: serif;">{evento_seleccionado.capitalize()}</h1>
                     </div>
                     """,
                     unsafe_allow_html=True
@@ -130,7 +129,7 @@ with tab_cliente:
                 st.markdown(
                     f"""
                     <div style="text-align: left; padding: 15px 0;">
-                        <h2 style="margin:0;">{evento_seleccionado.capitalize()}</h2>
+                        <h2 style="margin:0; font-family: serif; font-size: 30px;">{evento_seleccionado.capitalize()}</h2>
                         <span style="font-size: 11px; letter-spacing: 2px; color: #666;">CAMY.INSTANTES.PH</span>
                     </div>
                     """,
@@ -157,170 +156,4 @@ with tab_cliente:
 
                 cols = st.columns(2)
                 for index, foto in enumerate(fotos):
-                    ruta_foto = os.path.join(ruta_galeria, foto)
-                    col = cols[index % 2]
-
-                    with col:
-                        imagen = Image.open(ruta_foto)
-                        imagen = ImageOps.exif_transpose(imagen)
-                        st.image(imagen, use_container_width=True)
-
-                        favs_actuales = info_evento.get("favoritas", [])
-                        if not isinstance(favs_actuales, list):
-                            favs_actuales = []
-                        es_fav_previo = foto in favs_actuales
-
-                        es_fav = st.checkbox("❤️ Me gusta", value=es_fav_previo, key=f"fav_{index}_{foto}")
-
-                        if es_fav != es_fav_previo:
-                            if es_fav and foto not in favs_actuales:
-                                favs_actuales.append(foto)
-                            elif not es_fav and foto in favs_actuales:
-                                favs_actuales.remove(foto)
-
-                            info_evento["favoritas"] = favs_actuales
-                            ruta_json = os.path.join(ruta_galeria, "info.json")
-                            with open(ruta_json, "w", encoding="utf-8") as f:
-                                json.dump(info_evento, f, ensure_ascii=False, indent=4)
-
-                        with open(ruta_foto, "rb") as file_data:
-                            st.download_button(
-                                label="📥 Descargar",
-                                data=file_data,
-                                file_name=foto,
-                                mime="image/jpeg",
-                                key=f"dl_{index}_{foto}"
-                            )
-
-# =========================================================
-# 2. PANEL DE LA FOTÓGRAFA
-# =========================================================
-with tab_fotografo:
-    # --- PANTALLA DE LOGIN ---
-    if not st.session_state["fotografo_autenticado"]:
-        st.subheader("🔑 Acceso Restringido - Panel de Camila")
-        p_input = st.text_input("Ingresa tu contraseña de Administradora:", type="password", key="pass_admin").strip()
-
-        if st.button("INGRESAR AL PANEL", use_container_width=True, type="primary"):
-            if p_input == PASSWORD_FOTOGRAFA:
-                st.session_state["fotografo_autenticado"] = True
-                st.rerun()
-            else:
-                st.error("Contraseña incorrecta.")
-
-    # --- PANEL ADMINISTRATIVO DENTRO DE SESIÓN ---
-    else:
-        col_admin1, col_admin2 = st.columns([3, 1])
-        with col_admin1:
-            st.subheader("📷 Panel de Gestión de Camila")
-        with col_admin2:
-            if st.button("🔴 CERRAR SESIÓN", use_container_width=True):
-                st.session_state["fotografo_autenticado"] = False
-                st.session_state["archivos_subidos_temp"] = []
-                st.rerun()
-
-        ruta_fotografo = obtener_ruta_fotografo()
-        st.markdown("---")
-
-        # --- SECCIÓN A: CARGAR ÁLBUM (CARGA MÚLTIPLE COMPATIBLE CON ANDROID) ---
-        st.subheader("➕ Cargar Nuevo Álbum de Cliente")
-        
-        nombre_evento = st.text_input("Nombre del Cliente o Evento (Ej: Boda Ayelen):").strip()
-        clave_evento = st.text_input("Contraseña de acceso para el cliente:", type="password").strip()
-
-        st.write("📸 **Selecciona las fotos de tu álbum:**")
-        
-        # Componente de subida múltiple alternativo
-        archivos_cargados = st.file_uploader(
-            "Puedes seleccionar todas las fotos juntas de la galería:",
-            type=["jpg", "jpeg", "png", "webp"],
-            accept_multiple_files=True,
-            key=f"uploader_archivos_{nombre_evento}"
-        )
-
-        if archivos_cargados:
-            st.session_state["archivos_subidos_temp"] = archivos_cargados
-            st.success(f"📌 ¡Se han seleccionado **{len(archivos_cargados)}** foto(s) correctamente!")
-
-        if st.button("GUARDAR Y CREAR GALERÍA", type="primary", use_container_width=True):
-            archivos_a_guardar = st.session_state.get("archivos_subidos_temp", [])
-            if nombre_evento and clave_evento and archivos_a_guardar:
-                ruta_evento = os.path.join(ruta_fotografo, nombre_evento)
-                os.makedirs(ruta_evento, exist_ok=True)
-
-                for archivo in archivos_a_guardar:
-                    ruta_guardado = os.path.join(ruta_evento, archivo.name)
-                    with open(ruta_guardado, "wb") as f:
-                        f.write(archivo.getbuffer())
-
-                guardar_info_evento(nombre_evento, {"password": clave_evento, "favoritas": []})
-                st.session_state["archivos_subidos_temp"] = []
-                st.success(f"¡Éxito! El álbum '{nombre_evento}' fue creado con {len(archivos_a_guardar)} foto(s).")
-                st.rerun()
-            else:
-                st.error("Por favor completa el nombre, la contraseña y selecciona al menos una foto.")
-
-        st.markdown("---")
-
-        eventos_existentes = [f for f in os.listdir(ruta_fotografo) if os.path.isdir(os.path.join(ruta_fotografo, f))]
-
-        # --- SECCIÓN B: REVISAR FOTOS FAVORITAS ---
-        st.subheader("❤️ Fotos Favoritas Elegidas por el Cliente")
-        if eventos_existentes:
-            evento_fav_sel = st.selectbox("Selecciona un álbum para ver sus favoritas:", eventos_existentes, key="select_fav_album")
-            if evento_fav_sel:
-                ruta_ev = os.path.join(ruta_fotografo, evento_fav_sel)
-                info = obtener_info_evento_por_ruta(ruta_ev)
-                favs = info.get("favoritas", [])
-
-                if favs:
-                    st.write(f"📌 El cliente seleccionó **{len(favs)}** foto(s) favorita(s):")
-                    cols_fav = st.columns(4)
-                    for idx, f in enumerate(favs):
-                        ruta_fav = os.path.join(ruta_ev, f)
-                        col = cols_fav[idx % 4]
-                        if os.path.exists(ruta_fav):
-                            img_fav = Image.open(ruta_fav)
-                            img_fav = ImageOps.exif_transpose(img_fav)
-                            col.image(img_fav, caption=f, use_container_width=True)
-                        else:
-                            col.write(f"📷 {f}")
-                else:
-                    st.info("El cliente aún no ha seleccionado fotos favoritas en este álbum.")
-        else:
-            st.info("Aún no hay álbumes creados.")
-
-        st.markdown("---")
-
-        # --- SECCIÓN C: GESTIÓN DE TRABAJOS EN 4 COLUMNAS Y BORRADO ---
-        st.subheader("📁 Historial de Trabajos")
-        if eventos_existentes:
-            album_ver = st.selectbox("Selecciona un álbum para explorar sus fotos:", eventos_existentes, key="ver_historial")
-            
-            if album_ver:
-                ruta_album = os.path.join(ruta_fotografo, album_ver)
-                fotos_album = [f for f in os.listdir(ruta_album) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
-
-                st.write(f"📷 Total de fotos en **{album_ver}**: {len(fotos_album)}")
-
-                with st.expander("🗑️ Eliminar Trabajo"):
-                    st.warning(f"¿Deseas eliminar permanentemente la carpeta '{album_ver}' y todas sus fotos?")
-                    if st.button("ELIMINAR ÁLBUM COMPLETO", key=f"del_{album_ver}"):
-                        shutil.rmtree(ruta_album)
-                        st.success(f"La carpeta '{album_ver}' ha sido eliminada.")
-                        st.rerun()
-
-                cols_historial = st.columns(4)
-                for idx, foto in enumerate(fotos_album):
-                    col = cols_historial[idx % 4]
-                    ruta_img = os.path.join(ruta_album, foto)
-                    
-                    with col:
-                        img_hist = Image.open(ruta_img)
-                        img_hist = ImageOps.exif_transpose(img_hist)
-                        st.image(img_hist, caption=foto, use_container_width=True)
-                        
-                        with st.popover("🔍 Agrandar"):
-                            st.image(img_hist, caption=foto, use_container_width=True)
-        else:
-            st.info("No hay trabajos guardados actualmente.")
+                    ruta_foto = os.
